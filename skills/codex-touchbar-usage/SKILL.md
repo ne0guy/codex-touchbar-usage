@@ -10,6 +10,10 @@ test, modify, or troubleshoot the `codex-touchbar-usage` local plugin.
 
 ## Architecture
 
+- This checkout also supports ZCode (`dev.zcode.app`) through independent ZCode stores and a separate view. See `../../docs/zcode-usage.md`.
+- ZCode uses official Go/GLM usage endpoints and incremental local rollout totals, with keys read from ZCode configuration without logging them. Its rolling quotas do not use Codex stabilization.
+- Use `--zcode-once-json` (optionally `--no-remote`) to diagnose ZCode. Its provider label means the most recently logged request, not the currently selected conversation.
+
 - The plugin installs a lightweight native macOS helper app at `~/Applications/CodexTouchBarHelper.app`.
 - The helper uses an AppKit `NSTouchBar` system modal view and only presents it while Codex is frontmost.
 - Frontmost app changes are event-driven through `NSWorkspace.didActivateApplicationNotification`.

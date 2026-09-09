@@ -33,12 +33,15 @@ public final class UsageStore {
         if allowRemote {
             do {
                 let remote = try await fetchRemoteUsage()
+                try Task.checkCancellation()
                 var raw = remote.raw
                 enrichWithLocalUsage(&raw)
                 let snapshot = normalizeUsage(raw, source: remote.source)
+                try Task.checkCancellation()
                 if isAllZeroUsage(snapshot) {
                     do {
                         let (sessionSnapshot, sessionRaw) = try latestSessionSnapshot(error: "remote returned all-zero usage")
+                        try Task.checkCancellation()
                         if !isAllZeroUsage(sessionSnapshot) {
                             if writeCache {
                                 writeSessionCacheIfNoOfficialCache(raw: sessionRaw, snapshot: sessionSnapshot)
@@ -46,6 +49,7 @@ public final class UsageStore {
                             return sessionSnapshot
                         }
                     } catch {
+                        if Task.isCancelled { throw CancellationError() }
                         errors.append("session-after-zero-remote: \(type(of: error)): \(error.localizedDescription)")
                     }
                     errors.append("remote: skipped all-zero usage snapshot")
@@ -56,17 +60,21 @@ public final class UsageStore {
                     return snapshot
                 }
             } catch {
+                if Task.isCancelled { throw CancellationError() }
                 errors.append("remote: \(type(of: error)): \(error.localizedDescription)")
             }
         }
 
+        try Task.checkCancellation()
         do {
             let (snapshot, raw) = try latestSessionSnapshot(error: errors.joined(separator: "; "))
+            try Task.checkCancellation()
             if writeCache {
                 writeSessionCacheIfNoOfficialCache(raw: raw, snapshot: snapshot)
             }
             return snapshot
         } catch {
+            if Task.isCancelled { throw CancellationError() }
             errors.append("session: \(type(of: error)): \(error.localizedDescription)")
         }
 
@@ -174,11 +182,13 @@ public final class UsageStore {
     }
 
     private func fetchRemoteUsage() async throws -> (raw: JSONObject, source: String) {
+        try Task.checkCancellation()
         var failures: [String] = []
         if let client = CodexAppServerClient(timeout: configuration.requestTimeout) {
             do {
                 return (try client.fetchUsage(), "app-server")
             } catch {
+                if Task.isCancelled { throw CancellationError() }
                 failures.append("app-server: \(error.localizedDescription)")
             }
         } else {

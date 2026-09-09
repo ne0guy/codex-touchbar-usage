@@ -49,6 +49,8 @@ It is not Electron, not a WebView, and not a fragile pile of separate Touch Bar 
 
 ## Why This Project
 
+This source checkout adds **ZCode support**: GLM / OpenCode Go balances and today's local tokens while ZCode is focused, with tap-to-expand quota details. The Codex panel is preserved. Previously published archives do not include this extension; install from this checkout. See [ZCode usage](docs/zcode-usage.md) for details and data definitions.
+
 | Design priority | Codex Touch Bar Usage |
 | --- | --- |
 | Codex-first | Built around official main quota, reset cards, reset times, and yesterday / lifetime tokens instead of a generic dashboard |

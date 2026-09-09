@@ -49,6 +49,8 @@
 
 ## 为什么是它
 
+源码新增 **ZCode 扩展**：聚焦 ZCode 时显示 GLM / OpenCode Go 余额与今日 token，点按查看完整额度和累计统计；Codex 原面板保持不变。此前发布的安装包尚不含此扩展，使用当前源码安装。数据口径和使用方式见 [ZCode 说明](docs/zcode-usage.md)。
+
 | 设计重点 | Codex Touch Bar Usage |
 | --- | --- |
 | Codex 专属 | 围绕官方主额度、重置卡、重置时间、昨日 / 累计 token 设计，不做无关仪表盘 |

@@ -2,6 +2,16 @@
 
 All notable changes to Codex Touch Bar Usage are documented here.
 
+## Unreleased
+
+- Add a separate ZCode panel for GLM and OpenCode Go quota balances, with
+  incremental local token statistics and tap-to-expand details.
+- Preserve the existing Codex drawing and quota semantics while routing updates
+  by foreground application and rejecting late results from cancelled tasks.
+- Debounce brief focus changes and move Codex blocking reads off the UI executor.
+- Optimize direct release builds and add native rendering, rapid-switch,
+  quota transport, and incremental-log checks.
+
 ## [0.3.6] - 2026-07-22
 
 ### Added

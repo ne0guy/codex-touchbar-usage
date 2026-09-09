@@ -1,212 +1,250 @@
 import AppKit
 import CodexTouchBarCore
 
+// Keep synchronous session scans and app-server waits off the UI executor.
+private actor CodexUsageLoader {
+    let store: UsageStore
+    init(configuration: UsageStoreConfiguration) { store = UsageStore(configuration: configuration) }
+    func cached() throws -> UsageSnapshot { try store.resolveCachedUsage() }
+    func local() -> UsageSnapshot { store.resolveLocalTokenUsage() }
+    func remote() async throws -> UsageSnapshot {
+        try Task.checkCancellation()
+        return try await store.resolveUsage(allowRemote: true, cacheMaxAge: 0)
+    }
+}
+
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
-    private let usageStore: UsageStore
+    private let codexLoader: CodexUsageLoader
+    private let zcodeStore = ZCodeUsageStore()
     private let touchBarController = TouchBarController()
     private var frontmostMonitor: FrontmostAppMonitor?
-    private var localRefreshTimer: Timer?
-    private var remoteRefreshTimer: Timer?
-    private var resetCardRefreshTimer: Timer?
-    private var localRefreshTask: Task<Void, Never>?
-    private var remoteRefreshTask: Task<Void, Never>?
-    private var cachePreloadTask: Task<Void, Never>?
-    private var currentSnapshot: UsageSnapshot?
+    private var localTimer: Timer?
+    private var remoteTimer: Timer?
+    private var resetTimer: Timer?
+    private var startup: DispatchWorkItem?
+    private var statsContinuation: DispatchWorkItem?
+    private var preloadTask: Task<Void, Never>?
+    private var localTasks: [ForegroundTarget: Task<Void, Never>] = [:]
+    private var remoteTasks: [ForegroundTarget: Task<Void, Never>] = [:]
+    private var target: ForegroundTarget = .none
+    private var generation = 0
+    private var codexSnapshot: UsageSnapshot?
     private var lastOfficialSnapshot: UsageSnapshot?
-    private var lastRemoteFailureDescription: String?
-    private var resetCardRefreshDeadline: Date?
-    private var isCodexFrontmost = false
-    private let localRefreshInterval: TimeInterval = 3
-    private let remoteRefreshInterval: TimeInterval = 30
-    private let resetCardRefreshInterval: TimeInterval = 8
-    private let resetCardRefreshDuration: TimeInterval = 3 * 60
+    private var zcodeSnapshot = ZCodeUsageSnapshot.placeholder
+    private var zcodeLoaded = false
+    private var lastRemoteSuccess: [ForegroundTarget: Date] = [:]
+    private var resetDeadline: Date?
+    private var lastFailure: String?
 
     init(configuration: UsageStoreConfiguration) {
-        self.usageStore = UsageStore(configuration: configuration)
+        codexLoader = CodexUsageLoader(configuration: configuration)
         super.init()
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         UserDefaults.standard.set(false, forKey: "DFRSystemModalShowsCloseBox")
-
-        let targetNames = targetApplicationNames()
-        let monitor = FrontmostAppMonitor(targetNames: targetNames) { [weak self] visible in
-            self?.handleVisibilityChange(visible)
+        frontmostMonitor = FrontmostAppMonitor(targetNames: targetApplicationNames()) { [weak self] target in
+            self?.handleTargetChange(target)
         }
-        frontmostMonitor = monitor
-        monitor.start()
-        preloadCachedUsage()
+        frontmostMonitor?.start()
+        preloadTask = Task { [weak self] in
+            guard let self else { return }
+            let cached = try? await codexLoader.cached()
+            guard !Task.isCancelled else { return }
+            if codexSnapshot == nil, let cached {
+                codexSnapshot = cached
+                if ["app-server", "remote"].contains(cached.source) { lastOfficialSnapshot = cached }
+                touchBarController.update(cached)
+            }
+            let cachedZCode = await zcodeStore.cachedSnapshot()
+            guard !Task.isCancelled else { return }
+            if !zcodeLoaded {
+                zcodeSnapshot = cachedZCode
+                touchBarController.update(cachedZCode)
+            }
+        }
     }
 
     func applicationWillTerminate(_ notification: Notification) {
         stopRefresh()
-        cachePreloadTask?.cancel()
+        preloadTask?.cancel()
         touchBarController.hideImmediately()
     }
 
-    private func handleVisibilityChange(_ visible: Bool) {
-        guard visible != isCodexFrontmost else { return }
-        isCodexFrontmost = visible
-
-        if visible {
-            touchBarController.show()
-            startRefresh()
-        } else {
-            stopRefresh()
+    private func handleTargetChange(_ next: ForegroundTarget) {
+        guard target != next else { return }
+        stopRefresh()
+        generation += 1
+        target = next
+        if next == .none {
             touchBarController.hideAnimated()
+            return
         }
+        if next == .codex { touchBarController.update(codexSnapshot ?? .placeholder) }
+        else { touchBarController.update(zcodeSnapshot) }
+        touchBarController.show(for: next)
+        scheduleStartup()
+    }
+
+    private func scheduleStartup() {
+        startup?.cancel()
+        statsContinuation?.cancel()
+        let expected = generation
+        let work = DispatchWorkItem { [weak self] in
+            guard let self, self.generation == expected, self.target != .none else { return }
+            self.startRefresh()
+        }
+        startup = work
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: work)
     }
 
     private func startRefresh() {
-        stopRefresh()
-        refreshRemoteUsage()
-        refreshLocalUsage()
-
-        localRefreshTimer = Timer.scheduledTimer(withTimeInterval: localRefreshInterval, repeats: true) { [weak self] _ in
-            self?.refreshLocalUsage()
+        let expected = generation
+        localTimer?.invalidate()
+        remoteTimer?.invalidate()
+        refreshRemote()
+        refreshLocal()
+        localTimer = Timer.scheduledTimer(withTimeInterval: target == .codex ? 3 : 15, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == expected else { return }
+                self.refreshLocal()
+            }
         }
-        localRefreshTimer?.tolerance = 0.5
-
-        remoteRefreshTimer = Timer.scheduledTimer(withTimeInterval: remoteRefreshInterval, repeats: true) { [weak self] _ in
-            self?.refreshRemoteUsage()
+        localTimer?.tolerance = 0.5
+        remoteTimer = Timer.scheduledTimer(withTimeInterval: 30, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.generation == expected else { return }
+                self.refreshRemote()
+            }
         }
-        remoteRefreshTimer?.tolerance = 3
-
-        resumeResetCardRefreshIfNeeded()
+        remoteTimer?.tolerance = 3
+        configureResetTimer()
     }
 
     private func stopRefresh() {
-        localRefreshTimer?.invalidate()
-        localRefreshTimer = nil
-        remoteRefreshTimer?.invalidate()
-        remoteRefreshTimer = nil
-        resetCardRefreshTimer?.invalidate()
-        resetCardRefreshTimer = nil
-        localRefreshTask?.cancel()
-        localRefreshTask = nil
-        remoteRefreshTask?.cancel()
-        remoteRefreshTask = nil
+        startup?.cancel()
+        statsContinuation?.cancel()
+        localTimer?.invalidate()
+        remoteTimer?.invalidate()
+        resetTimer?.invalidate()
+        localTimer = nil
+        remoteTimer = nil
+        resetTimer = nil
+        for task in localTasks.values { task.cancel() }
+        for task in remoteTasks.values { task.cancel() }
+        // Occupy task slots until cancellation has actually completed.
     }
 
-    private func refreshLocalUsage() {
-        localRefreshTask?.cancel()
-        localRefreshTask = Task { [weak self] in
+    private func refreshLocal() {
+        let requestedTarget = target
+        let expected = generation
+        guard requestedTarget != .none, localTasks[requestedTarget] == nil else { return }
+        localTasks[requestedTarget] = Task { [weak self] in
             guard let self else { return }
-            let snapshot = usageStore.resolveLocalTokenUsage()
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                guard let currentSnapshot = self.currentSnapshot else { return }
-                let merged = currentSnapshot.mergingLocalTokenUsage(from: snapshot)
-                self.currentSnapshot = merged
-                self.touchBarController.update(merged)
+            defer {
+                localTasks[requestedTarget] = nil
+                if target == requestedTarget, generation != expected { refreshLocal() }
             }
-        }
-    }
-
-    private func preloadCachedUsage() {
-        cachePreloadTask = Task { [weak self] in
-            guard let self, let snapshot = try? usageStore.resolveCachedUsage() else { return }
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                guard self.currentSnapshot == nil else { return }
-                self.currentSnapshot = snapshot
-                if snapshot.source == "app-server" || snapshot.source == "remote" {
-                    self.lastOfficialSnapshot = snapshot
-                }
-                if self.isCodexFrontmost {
-                    self.touchBarController.update(snapshot)
-                }
-            }
-        }
-    }
-
-    private func refreshRemoteUsage() {
-        guard remoteRefreshTask == nil else { return }
-        remoteRefreshTask = Task { [weak self] in
-            guard let self else { return }
-
-            do {
-                let snapshot = try await usageStore.resolveUsage(allowRemote: true, cacheMaxAge: 0)
-                guard !Task.isCancelled else { return }
-                await MainActor.run {
-                    self.remoteRefreshTask = nil
-                    guard snapshot.source == "app-server" || snapshot.source == "remote" || self.currentSnapshot == nil else {
-                        self.logRemoteFallback(snapshot)
-                        return
+            if requestedTarget == .codex {
+                let local = await codexLoader.local()
+                guard !Task.isCancelled, target == requestedTarget, generation == expected,
+                      let current = codexSnapshot else { return }
+                let merged = current.mergingLocalTokenUsage(from: local)
+                codexSnapshot = merged
+                touchBarController.update(merged)
+            } else {
+                let snapshot = await zcodeStore.refreshLocal()
+                guard !Task.isCancelled, target == requestedTarget, generation == expected else { return }
+                zcodeLoaded = true
+                zcodeSnapshot = snapshot
+                touchBarController.update(snapshot)
+                if !snapshot.statsReady {
+                    statsContinuation?.cancel()
+                    let work = DispatchWorkItem { [weak self] in
+                        guard let self, self.target == .zcode, self.generation == expected else { return }
+                        self.refreshLocal()
                     }
-                    self.lastRemoteFailureDescription = nil
-                    let previous = self.lastOfficialSnapshot
-                    let stabilized = previous?.stabilizingQuota(from: snapshot) ?? snapshot
-                    if let previous {
-                        let consumedResetCredit = snapshot.consumedResetCredit(since: previous)
-                        let quotaCycleAdvanced = stabilized.advancedPrimaryQuotaCycle(since: previous)
-                        if consumedResetCredit && !quotaCycleAdvanced {
-                            self.beginResetCardRefresh()
-                        } else if quotaCycleAdvanced {
-                            self.endResetCardRefresh()
-                        }
-                    }
-                    self.lastOfficialSnapshot = stabilized
-                    self.currentSnapshot = stabilized
-                    self.touchBarController.update(stabilized)
+                    statsContinuation = work
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.25, execute: work)
                 }
-            } catch {
-                guard !Task.isCancelled else { return }
-                await MainActor.run {
-                    self.remoteRefreshTask = nil
-                }
-                NSLog("CodexTouchBarHelper: remote refresh failed: \(error.localizedDescription)")
             }
         }
     }
 
-    private func beginResetCardRefresh() {
-        resetCardRefreshDeadline = Date().addingTimeInterval(resetCardRefreshDuration)
-        scheduleResetCardRefreshTimer()
-    }
-
-    private func resumeResetCardRefreshIfNeeded() {
-        guard let deadline = resetCardRefreshDeadline, deadline > Date() else {
-            endResetCardRefresh()
-            return
-        }
-        scheduleResetCardRefreshTimer()
-    }
-
-    private func scheduleResetCardRefreshTimer() {
-        guard isCodexFrontmost else { return }
-        resetCardRefreshTimer?.invalidate()
-        resetCardRefreshTimer = Timer.scheduledTimer(withTimeInterval: resetCardRefreshInterval, repeats: true) { [weak self] _ in
+    private func refreshRemote() {
+        let requestedTarget = target
+        let expected = generation
+        guard requestedTarget != .none, remoteTasks[requestedTarget] == nil else { return }
+        let interval: TimeInterval = requestedTarget == .codex && (resetDeadline ?? .distantPast) > Date() ? 8 : 30
+        if let last = lastRemoteSuccess[requestedTarget], Date().timeIntervalSince(last) < interval { return }
+        let requestStarted = Date()
+        remoteTasks[requestedTarget] = Task { [weak self] in
             guard let self else { return }
-            guard let deadline = self.resetCardRefreshDeadline, deadline > Date() else {
-                self.endResetCardRefresh()
+            defer {
+                remoteTasks[requestedTarget] = nil
+                if target == requestedTarget, generation != expected { refreshRemote() }
+            }
+            if requestedTarget == .zcode {
+                let snapshot = await zcodeStore.refreshRemote()
+                guard !Task.isCancelled, target == requestedTarget, generation == expected else { return }
+                zcodeLoaded = true
+                lastRemoteSuccess[requestedTarget] = requestStarted
+                zcodeSnapshot = snapshot
+                touchBarController.update(snapshot)
                 return
             }
-            self.refreshRemoteUsage()
+            do {
+                let snapshot = try await codexLoader.remote()
+                guard !Task.isCancelled, target == requestedTarget, generation == expected else { return }
+                guard ["app-server", "remote"].contains(snapshot.source) || codexSnapshot == nil else {
+                    let description = snapshot.error ?? "official usage unavailable"
+                    if lastFailure != description {
+                        lastFailure = description
+                        NSLog("CodexTouchBarHelper: official refresh unavailable: %@", description)
+                    }
+                    return
+                }
+                lastRemoteSuccess[requestedTarget] = requestStarted
+                lastFailure = nil
+                let previous = lastOfficialSnapshot
+                let stable = previous?.stabilizingQuota(from: snapshot) ?? snapshot
+                if let previous {
+                    if stable.advancedPrimaryQuotaCycle(since: previous) { resetDeadline = nil }
+                    else if snapshot.consumedResetCredit(since: previous) {
+                        resetDeadline = Date().addingTimeInterval(180)
+                    }
+                }
+                lastOfficialSnapshot = stable
+                codexSnapshot = stable
+                touchBarController.update(stable)
+                configureResetTimer()
+            } catch {
+                if !Task.isCancelled { NSLog("CodexTouchBarHelper: remote refresh failed: %@", error.localizedDescription) }
+            }
         }
-        resetCardRefreshTimer?.tolerance = 1
     }
 
-    private func endResetCardRefresh() {
-        resetCardRefreshTimer?.invalidate()
-        resetCardRefreshTimer = nil
-        resetCardRefreshDeadline = nil
-    }
-
-    private func logRemoteFallback(_ snapshot: UsageSnapshot) {
-        let description = snapshot.error ?? "official usage unavailable; using local session fallback"
-        guard description != lastRemoteFailureDescription else { return }
-        lastRemoteFailureDescription = description
-        NSLog("CodexTouchBarHelper: official refresh unavailable: \(description)")
+    private func configureResetTimer() {
+        resetTimer?.invalidate()
+        resetTimer = nil
+        guard target == .codex, let deadline = resetDeadline, deadline > Date() else { return }
+        let expected = generation
+        resetTimer = Timer.scheduledTimer(withTimeInterval: 8, repeats: true) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                guard let self, self.target == .codex, self.generation == expected else { return }
+                if (self.resetDeadline ?? .distantPast) <= Date() {
+                    self.resetDeadline = nil
+                    self.resetTimer?.invalidate()
+                    self.resetTimer = nil
+                } else { self.refreshRemote() }
+            }
+        }
+        resetTimer?.tolerance = 1
     }
 
     private func targetApplicationNames() -> Set<String> {
         let raw = ProcessInfo.processInfo.environment["CODEX_TOUCHBAR_TARGET_APPS"] ?? "Codex,ChatGPT,com.openai.codex"
-        return Set(
-            raw
-                .split(separator: ",")
-                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-                .filter { !$0.isEmpty }
-        )
+        return Set(raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })
     }
 }

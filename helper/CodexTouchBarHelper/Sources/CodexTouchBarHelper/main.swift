@@ -5,6 +5,19 @@ import Foundation
 let arguments = Set(CommandLine.arguments.dropFirst())
 let configuration = UsageStoreConfiguration()
 
+if arguments.contains("--zcode-once-json") {
+    let store = ZCodeUsageStore()
+    _ = await store.refreshLocal()
+    let snapshot = arguments.contains("--no-remote")
+        ? await store.cachedSnapshot()
+        : await store.refreshRemote()
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    FileHandle.standardOutput.write(try encoder.encode(snapshot))
+    FileHandle.standardOutput.write(Data("\n".utf8))
+    exit(0)
+}
+
 if arguments.contains("--rebuild-token-stats") {
     let stats = TokenStatsStore(
         codexHome: configuration.codexHome,

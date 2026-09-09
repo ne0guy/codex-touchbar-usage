@@ -23,10 +23,15 @@ else
   echo "SwiftPM is unavailable in this toolchain; falling back to direct swiftc build." >&2
   DIRECT_BUILD_DIR="${PACKAGE_DIR}/.build/direct-${CONFIGURATION}"
   TARGET_TRIPLE="$(uname -m)-apple-macosx${MACOSX_DEPLOYMENT_TARGET}"
+  SWIFT_FLAGS=(-Onone)
+  if [[ "${CONFIGURATION}" == "release" ]]; then
+    SWIFT_FLAGS=(-O)
+  fi
   rm -rf "${DIRECT_BUILD_DIR}"
   mkdir -p "${DIRECT_BUILD_DIR}"
 
   swiftc \
+    "${SWIFT_FLAGS[@]}" \
     -target "${TARGET_TRIPLE}" \
     -parse-as-library \
     -emit-library \
@@ -38,6 +43,7 @@ else
     -o "${DIRECT_BUILD_DIR}/libCodexTouchBarCore.a"
 
   swiftc \
+    "${SWIFT_FLAGS[@]}" \
     -target "${TARGET_TRIPLE}" \
     -I "${DIRECT_BUILD_DIR}" \
     -L "${DIRECT_BUILD_DIR}" \
