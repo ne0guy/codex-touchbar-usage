@@ -53,8 +53,8 @@ final class UsageParsingTests: XCTestCase {
         XCTAssertEqual(snapshot.secondary?.windowMinutes, 10_080)
         XCTAssertEqual(UsageFormatting.balanceLabel(usedPercent: snapshot.primary?.usedPercent), "93%")
         XCTAssertEqual(UsageFormatting.balanceLabel(usedPercent: snapshot.secondary?.usedPercent), "37%")
-        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).0, "昨日 8121万")
-        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).1, "累计 64亿")
+        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).0, "Yesterday 81.2M")
+        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).1, "Lifetime 6.4B")
     }
 
     func testTokenRowsFallBackToLocalTokenStatsWhenProfileUsageIsMissing() {
@@ -78,8 +78,8 @@ final class UsageParsingTests: XCTestCase {
 
         let snapshot = store.normalizeUsage(raw, source: "test")
 
-        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).0, "昨日 8121万")
-        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).1, "累计 64亿")
+        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).0, "Yesterday 81.2M")
+        XCTAssertEqual(UsageFormatting.tokenRows(snapshot).1, "Lifetime 6.4B")
     }
 
     func testSessionUsageShapeStillWorks() {
@@ -233,49 +233,50 @@ final class UsageParsingTests: XCTestCase {
         XCTAssertNotNil(raw["rate_limit"])
     }
 
-    func testAppServerUsageMapsNamedAdditionalLimitIntoSecondRow() throws {
-        let mainLimit: JSONObject = [
-            "limitId": "codex",
+    func testAppServerUsagePrefersCodexFiveHourAndWeeklyWindows() throws {
+        let activeModel: JSONObject = [
+            "limitId": "codex_bengalfox",
+            "limitName": "GPT-5.3-Codex-Spark",
             "primary": [
-                "usedPercent": 8,
+                "usedPercent": 1,
                 "windowDurationMins": 10_080,
                 "resetsAt": 1_800_000_000
             ],
             "secondary": NSNull(),
             "planType": "pro"
         ]
-        let sparkLimit: JSONObject = [
-            "limitId": "codex_bengalfox",
-            "limitName": "GPT-5.3-Codex-Spark",
+        let codexLimit: JSONObject = [
+            "limitId": "codex",
             "primary": [
-                "usedPercent": 0,
+                "usedPercent": 20,
+                "windowDurationMins": 300,
+                "resetsAt": 1_800_000_000
+            ],
+            "secondary": [
+                "usedPercent": 65,
                 "windowDurationMins": 10_080,
                 "resetsAt": 1_800_010_000
             ],
-            "secondary": NSNull(),
             "planType": "pro"
         ]
         let raw = try CodexAppServerClient.combine(
             rateLimits: [
-                "rateLimits": mainLimit,
+                "rateLimits": activeModel,
                 "rateLimitsByLimitId": [
-                    "codex": mainLimit,
-                    "codex_bengalfox": sparkLimit
+                    "codex": codexLimit,
+                    "codex_bengalfox": activeModel
                 ]
             ],
             tokenUsage: [:]
         )
 
         let snapshot = UsageStore().normalizeUsage(raw, source: "app-server")
+        let windows = UsageFormatting.trackedWindows(snapshot)
 
-        XCTAssertEqual(snapshot.primary?.name, "codex")
-        XCTAssertEqual(snapshot.primary?.windowMinutes, 10_080)
-        XCTAssertEqual(snapshot.primary?.usedPercent, 8)
-        XCTAssertEqual(snapshot.secondary?.name, "GPT-5.3-Codex-Spark")
-        XCTAssertEqual(snapshot.secondary?.windowMinutes, 10_080)
-        XCTAssertEqual(snapshot.secondary?.usedPercent, 0)
-        XCTAssertEqual(UsageFormatting.windowLabel(snapshot.primary), "1周")
-        XCTAssertEqual(UsageFormatting.windowLabel(snapshot.secondary), "Spark")
+        XCTAssertEqual(windows.fiveHour?.usedPercent, 20)
+        XCTAssertEqual(windows.weekly?.usedPercent, 65)
+        XCTAssertEqual(UsageFormatting.windowLabel(windows.fiveHour), "5h")
+        XCTAssertEqual(UsageFormatting.windowLabel(windows.weekly), "1w")
     }
 
     func testAppServerUsageMapsResetCreditCountAndEarliestExpiration() throws {
@@ -304,16 +305,16 @@ final class UsageParsingTests: XCTestCase {
 
         XCTAssertEqual(snapshot.resetCreditsAvailable, 4)
         XCTAssertEqual(snapshot.resetCreditsExpiresAt, 1_800_010_000)
-        XCTAssertEqual(UsageFormatting.resetCreditCountLabel(snapshot.resetCreditsAvailable), "4张")
+        XCTAssertEqual(UsageFormatting.resetCreditCountLabel(snapshot.resetCreditsAvailable), "4")
     }
 
-    func testHTTPUsageMapsAdditionalRateLimitIntoSecondRow() {
+    func testHTTPUsageDoesNotMapAdditionalModelQuotaToWeeklyWindow() {
         let raw: JSONObject = [
             "plan_type": "pro",
             "rate_limit": [
                 "primary_window": [
                     "used_percent": 8,
-                    "limit_window_seconds": 604_800,
+                    "limit_window_seconds": 18_000,
                     "reset_at": 1_800_000_000
                 ],
                 "secondary_window": NSNull()
@@ -335,12 +336,10 @@ final class UsageParsingTests: XCTestCase {
         ]
 
         let snapshot = UsageStore().normalizeUsage(raw, source: "remote")
+        let windows = UsageFormatting.trackedWindows(snapshot)
 
-        XCTAssertEqual(snapshot.primary?.windowMinutes, 10_080)
-        XCTAssertEqual(snapshot.secondary?.name, "GPT-5.3-Codex-Spark")
-        XCTAssertEqual(snapshot.secondary?.windowMinutes, 10_080)
-        XCTAssertEqual(UsageFormatting.windowLabel(snapshot.primary), "1周")
-        XCTAssertEqual(UsageFormatting.windowLabel(snapshot.secondary), "Spark")
+        XCTAssertEqual(windows.fiveHour?.windowMinutes, 300)
+        XCTAssertNil(windows.weekly)
     }
 
     func testHTTPResetCreditDetailsAcceptISOExpirationDates() {
