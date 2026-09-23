@@ -16,7 +16,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-111?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
+[![Release](https://img.shields.io/github/v/release/ne0guy/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
 [![macOS](https://img.shields.io/badge/macOS-Touch%20Bar-111?style=flat-square&logo=apple)](#requirements)
 [![Swift](https://img.shields.io/badge/Swift-native%20AppKit-F05138?style=flat-square&logo=swift&logoColor=white)](helper/CodexTouchBarHelper)
 [![Codex](https://img.shields.io/badge/Codex-Touch%20Bar%20Plugin-8DFF55?style=flat-square)](#features)
@@ -42,7 +42,7 @@ It is not Electron, not a WebView, and not a fragile pile of separate Touch Bar 
 | --- | --- |
 | Identity | White italic `Codex` title |
 | Codex quota | Shows 5-hour and weekly usage percentages, remaining bars, and reset times |
-| Token usage | Yesterday's tokens and lifetime tokens, formatted in `万` / `亿` units |
+| Token usage | Yesterday's tokens and lifetime tokens, formatted in `M` / `B` units |
 | Frontmost app awareness | Shows only when Codex is focused, hides when you switch away |
 | Lightweight refresh | Normally refreshes about every 30 seconds; after a reset card is used, follows up about every 8 seconds for up to 3 minutes; stops while hidden |
 

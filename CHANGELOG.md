@@ -4,13 +4,6 @@ All notable changes to Codex Usage Bar are documented here.
 
 ## Unreleased
 
-## [0.3.7] - 2026-09-22
-
-### Changed
-
-- Show English 5-hour and weekly Codex usage percentages on the Touch Bar.
-- Publish a fork-owned Homebrew cask and Apple Silicon release for Codex Usage Bar.
-
 - Add a separate ZCode panel for GLM and OpenCode Go quota balances, with
   incremental local token statistics and tap-to-expand details.
 - Preserve the existing Codex drawing and quota semantics while routing updates
@@ -18,6 +11,13 @@ All notable changes to Codex Usage Bar are documented here.
 - Debounce brief focus changes and move Codex blocking reads off the UI executor.
 - Optimize direct release builds and add native rendering, rapid-switch,
   quota transport, and incremental-log checks.
+
+## [0.3.7] - 2026-09-22
+
+### Changed
+
+- Show English 5-hour and weekly Codex usage percentages on the Touch Bar.
+- Publish a fork-owned Homebrew cask and Apple Silicon release for Codex Usage Bar.
 
 ## [0.3.6] - 2026-07-22
 
