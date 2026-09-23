@@ -14,7 +14,7 @@ ZIP_PATH="${DIST_DIR}/${PACKAGE_NAME}.zip"
 rm -rf "${DIST_DIR}/stage"
 mkdir -p "${STAGE_DIR}"
 
-APP_DIR="${APP_DIR}" "${PLUGIN_DIR}/scripts/build_touchbar_helper.sh"
+APP_DIR="${APP_DIR}" bash "${PLUGIN_DIR}/scripts/build_touchbar_helper.sh"
 /usr/bin/codesign --force --deep --sign - "${APP_DIR}" >/dev/null
 
 cp "${PLUGIN_DIR}/packaging/install_release.sh" "${STAGE_DIR}/install.sh"
