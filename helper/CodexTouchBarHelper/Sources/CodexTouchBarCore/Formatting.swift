@@ -33,8 +33,8 @@ public enum UsageFormatting {
     }
 
     public static func resetCreditCountLabel(_ availableCount: Int?) -> String {
-        guard let availableCount else { return "--张" }
-        return "\(max(0, availableCount))张"
+        guard let availableCount else { return "--" }
+        return "\(max(0, availableCount))"
     }
 
     public static func windowLabel(_ window: LimitWindow?) -> String {
@@ -44,21 +44,21 @@ public enum UsageFormatting {
             return "Spark"
         }
         guard let minutes = window.windowMinutes, minutes > 0 else { return "--" }
-        if minutes == 10_080 { return "1周" }
-        if minutes % 1_440 == 0 { return "\(minutes / 1_440)天" }
-        if minutes % 60 == 0 { return "\(minutes / 60)小时" }
-        return "\(minutes)分"
+        if minutes == 10_080 { return "1w" }
+        if minutes % 1_440 == 0 { return "\(minutes / 1_440)d" }
+        if minutes % 60 == 0 { return "\(minutes / 60)h" }
+        return "\(minutes)m"
     }
 
     public static func tokenCount(_ value: Int?) -> String {
         guard let value else { return "--" }
-        if value >= 100_000_000 {
-            let amount = Double(value) / 100_000_000
-            return amount < 10 ? String(format: "%.1f亿", amount) : String(format: "%.0f亿", amount)
+        if value >= 1_000_000_000 {
+            let amount = Double(value) / 1_000_000_000
+            return amount < 10 ? String(format: "%.1fB", amount) : String(format: "%.0fB", amount)
         }
-        if value >= 10_000 {
-            let amount = Double(value) / 10_000
-            return amount < 100 ? String(format: "%.1f万", amount) : String(format: "%.0f万", amount)
+        if value >= 1_000_000 {
+            let amount = Double(value) / 1_000_000
+            return amount < 100 ? String(format: "%.1fM", amount) : String(format: "%.0fM", amount)
         }
         if value >= 1_000 {
             let amount = Double(value) / 1_000
@@ -67,14 +67,22 @@ public enum UsageFormatting {
         return "\(value)"
     }
 
+    public static func trackedWindows(_ snapshot: UsageSnapshot) -> (fiveHour: LimitWindow?, weekly: LimitWindow?) {
+        let available = [snapshot.primary, snapshot.secondary].compactMap { $0 }
+        return (
+            available.first { $0.windowMinutes == 300 },
+            available.first { $0.windowMinutes == 10_080 }
+        )
+    }
+
     public static func cumulativeTokenCount(_ snapshot: UsageSnapshot) -> Int? {
         snapshot.cumulativeTokens ?? snapshot.totalTokens
     }
 
     public static func tokenRows(_ snapshot: UsageSnapshot) -> (String, String) {
         return (
-            "昨日 \(tokenCount(snapshot.yesterdayTokens))",
-            "累计 \(tokenCount(cumulativeTokenCount(snapshot)))"
+            "Yesterday \(tokenCount(snapshot.yesterdayTokens))",
+            "Lifetime \(tokenCount(cumulativeTokenCount(snapshot)))"
         )
     }
 }
