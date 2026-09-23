@@ -53,30 +53,34 @@ final class UsageTouchBarView: NSView {
         dirtyRect.fill()
 
         let snapshot = snapshot ?? .placeholder
+        let windows = UsageFormatting.trackedWindows(snapshot)
         let row1Y: CGFloat = 0.0
         let row2Y: CGFloat = 15.0
         let textHeight: CGFloat = 15.0
 
         drawText("Codex", in: NSRect(x: 8, y: 7.0, width: 60, height: 17), font: codexFont, color: white, alignment: .left)
 
-        drawText(UsageFormatting.windowLabel(snapshot.primary), in: NSRect(x: 75, y: row1Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
-        drawText("重置卡", in: NSRect(x: 75, y: row2Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
+        drawText("5h", in: NSRect(x: 75, y: row1Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
+        drawText("1w", in: NSRect(x: 75, y: row2Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
 
         let barX: CGFloat = 124
         drawSegmentedBar(
             x: barX,
             y: row1Y + 4.5,
-            usedPercent: snapshot.primary?.usedPercent,
+            usedPercent: windows.fiveHour?.usedPercent,
             segments: 10,
             segmentWidth: 21,
             segmentHeight: 7.8,
             gap: 5.2
         )
-        drawResetCreditTickets(
+        drawSegmentedBar(
             x: barX,
             y: row2Y + 4.5,
-            availableCount: snapshot.resetCreditsAvailable,
-            expiresAt: snapshot.resetCreditsExpiresAt
+            usedPercent: windows.weekly?.usedPercent,
+            segments: 10,
+            segmentWidth: 21,
+            segmentHeight: 7.8,
+            gap: 5.2
         )
 
         let percentX: CGFloat = 396
@@ -84,29 +88,29 @@ final class UsageTouchBarView: NSView {
         let tokenX: CGFloat = 552
 
         drawText(
-            UsageFormatting.balanceLabel(usedPercent: snapshot.primary?.usedPercent),
+            UsageFormatting.balanceLabel(usedPercent: windows.fiveHour?.usedPercent),
             in: NSRect(x: percentX, y: row1Y, width: 42, height: textHeight),
             font: valueFont,
             color: white,
             alignment: .right
         )
         drawText(
-            UsageFormatting.resetCreditCountLabel(snapshot.resetCreditsAvailable),
+            UsageFormatting.balanceLabel(usedPercent: windows.weekly?.usedPercent),
             in: NSRect(x: percentX, y: row2Y, width: 42, height: textHeight),
             font: valueFont,
-            color: snapshot.resetCreditsAvailable == 0 ? muted : white,
+            color: windows.weekly == nil ? muted : white,
             alignment: .right
         )
 
         drawText(
-            UsageFormatting.resetLabel(snapshot.primary?.resetsAt),
+            UsageFormatting.resetLabel(windows.fiveHour?.resetsAt),
             in: NSRect(x: dateX, y: row1Y, width: 82, height: textHeight),
             font: smallMonoFont,
             color: muted,
             alignment: .left
         )
         drawText(
-            UsageFormatting.resetLabel(snapshot.resetCreditsExpiresAt),
+            UsageFormatting.resetLabel(windows.weekly?.resetsAt),
             in: NSRect(x: dateX, y: row2Y, width: 82, height: textHeight),
             font: smallMonoFont,
             color: muted,
@@ -122,77 +126,6 @@ final class UsageTouchBarView: NSView {
         } else if errorMessage != nil {
             drawErrorDot()
         }
-    }
-
-    private func drawResetCreditTickets(
-        x: CGFloat,
-        y: CGFloat,
-        availableCount: Int?,
-        expiresAt: Int?
-    ) {
-        let count = max(0, availableCount ?? 0)
-        let visibleCount = min(count, 7)
-        let ticketWidth: CGFloat = 28
-        let ticketHeight: CGFloat = 7.8
-        let gap: CGFloat = 5.5
-        let color = resetCreditColor(availableCount: availableCount, expiresAt: expiresAt)
-
-        if availableCount == nil || count == 0 {
-            let rect = NSRect(x: x, y: y, width: ticketWidth, height: ticketHeight)
-            let path = NSBezierPath(roundedRect: rect, xRadius: 2.6, yRadius: 2.6)
-            emptyFill.setFill()
-            path.fill()
-            emptyStroke.withAlphaComponent(availableCount == nil ? 0.55 : 0.35).setStroke()
-            path.lineWidth = 0.8
-            path.stroke()
-            return
-        }
-
-        for index in 0..<visibleCount {
-            let left = x + CGFloat(index) * (ticketWidth + gap)
-            let rect = NSRect(x: left, y: y, width: ticketWidth, height: ticketHeight)
-            let path = NSBezierPath(roundedRect: rect, xRadius: 2.6, yRadius: 2.6)
-
-            color.withAlphaComponent(0.17).setFill()
-            path.fill()
-            color.withAlphaComponent(0.78).setStroke()
-            path.lineWidth = 0.85
-            path.stroke()
-
-            color.withAlphaComponent(0.52).setStroke()
-            let divider = NSBezierPath()
-            divider.move(to: NSPoint(x: left + 6.5, y: y + 1.8))
-            divider.line(to: NSPoint(x: left + 6.5, y: y + ticketHeight - 1.8))
-            divider.lineWidth = 0.75
-            divider.stroke()
-
-            greenTop.withAlphaComponent(0.42).setFill()
-            NSBezierPath(
-                roundedRect: NSRect(x: left + 9.5, y: y + 1.25, width: ticketWidth - 12, height: 1.35),
-                xRadius: 0.7,
-                yRadius: 0.7
-            ).fill()
-        }
-
-        if count > visibleCount {
-            let plusX = x + CGFloat(visibleCount) * (ticketWidth + gap) - gap + 4
-            drawText(
-                "+",
-                in: NSRect(x: plusX, y: y - 4, width: 12, height: 15),
-                font: valueFont,
-                color: color,
-                alignment: .left
-            )
-        }
-    }
-
-    private func resetCreditColor(availableCount: Int?, expiresAt: Int?) -> NSColor {
-        guard let availableCount, availableCount > 0 else { return emptyStroke }
-        if let expiresAt,
-           TimeInterval(expiresAt) - Date().timeIntervalSince1970 <= 24 * 60 * 60 {
-            return warning
-        }
-        return green
     }
 
     private func drawText(

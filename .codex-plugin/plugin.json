@@ -1,9 +1,9 @@
 {
-  "name": "codex-touchbar-usage",
-  "version": "0.3.6",
-  "description": "Show Codex quota, reset cards, and token usage on a MacBook Touch Bar through a native macOS helper.",
+  "name": "codex-usage-bar",
+  "version": "0.3.7",
+  "description": "Show Codex 5-hour and weekly usage on a MacBook Touch Bar through a native macOS helper.",
   "author": {
-    "name": "Daytimeflow"
+    "name": "ne0guy"
   },
   "keywords": [
     "codex",
@@ -14,10 +14,10 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Codex Touch Bar Usage",
-    "shortDescription": "Show Codex quota and reset cards on the MacBook Touch Bar.",
-    "longDescription": "Codex Touch Bar Usage installs a lightweight native macOS helper that reads official Codex quota, reset-card availability, reset times, and account token usage, then renders them on Touch Bar only while Codex is frontmost.",
-    "developerName": "Daytimeflow",
+    "displayName": "Codex Usage Bar",
+    "shortDescription": "Show Codex 5-hour and weekly usage on the MacBook Touch Bar.",
+    "longDescription": "Codex Usage Bar installs a lightweight native macOS helper that shows official Codex 5-hour and weekly usage percentages, remaining bars, reset times, and token usage on the Touch Bar while Codex is frontmost.",
+    "developerName": "ne0guy",
     "category": "Productivity",
     "capabilities": [
       "Local scripts",
