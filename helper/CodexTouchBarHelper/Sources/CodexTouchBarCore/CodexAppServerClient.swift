@@ -109,7 +109,9 @@ final class CodexAppServerClient {
     }
 
     static func combine(rateLimits: JSONObject, tokenUsage: JSONObject) throws -> JSONObject {
-        guard let limits = rateLimits["rateLimits"] as? JSONObject else {
+        let limitsByID = rateLimits["rateLimitsByLimitId"] as? JSONObject ?? [:]
+        guard let limits = (limitsByID["codex"] as? JSONObject)
+            ?? (rateLimits["rateLimits"] as? JSONObject) else {
             throw UsageError.noUsableUsage("Codex app-server returned no rate limits")
         }
 
@@ -122,8 +124,6 @@ final class CodexAppServerClient {
         }
         if let secondary = appServerWindow(limits["secondary"], name: mainLimitName ?? "secondary") {
             apiRateLimit["secondary_window"] = secondary
-        } else if let additional = additionalAppServerWindow(rateLimits, excluding: mainLimitID) {
-            apiRateLimit["secondary_window"] = additional
         }
         raw["rate_limit"] = apiRateLimit
         if let resetCredits = compactResetCredits(rateLimits["rateLimitResetCredits"]) {
@@ -175,24 +175,6 @@ final class CodexAppServerClient {
             "limit_window_seconds": (minutes ?? 0) * 60,
             "reset_at": intValue(window["resetsAt"]) ?? 0
         ]
-    }
-
-    private static func additionalAppServerWindow(_ response: JSONObject, excluding mainLimitID: String?) -> JSONObject? {
-        guard let byID = response["rateLimitsByLimitId"] as? JSONObject else { return nil }
-        var candidateIDs = byID.keys.filter { $0 != mainLimitID && $0 != "codex" }.sorted()
-        if let preferredIndex = candidateIDs.firstIndex(of: "codex_bengalfox") {
-            candidateIDs.insert(candidateIDs.remove(at: preferredIndex), at: 0)
-        }
-
-        for identifier in candidateIDs {
-            guard let limit = byID[identifier] as? JSONObject else { continue }
-            let name = stringValue(limit["limitName"]) ?? stringValue(limit["limitId"]) ?? identifier
-            if let window = appServerWindow(limit["primary"], name: name)
-                ?? appServerWindow(limit["secondary"], name: name) {
-                return window
-            }
-        }
-        return nil
     }
 
     private static func findCodexExecutable() -> URL? {
