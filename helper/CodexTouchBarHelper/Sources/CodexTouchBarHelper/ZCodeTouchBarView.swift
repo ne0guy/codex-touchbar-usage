@@ -37,7 +37,7 @@ final class ZCodeTouchBarView: NSView {
         button.autoresizingMask = [.width, .height]
         button.target = self
         button.action = #selector(toggleDetails)
-        button.setAccessibilityLabel("ZCode 用量详情")
+        button.setAccessibilityLabel("ZCode usage details")
         addSubview(button)
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) is not supported") }
@@ -57,12 +57,12 @@ final class ZCodeTouchBarView: NSView {
         let secondary = isGo ? snapshot.goMonthly : snapshot.glmWeekly
         text(isUnknown ? "ZCode" : (isGo ? "Go" : "GLM"),
              x: 8, y: 7, width: 64, font: titleFont)
-        text("5小时", x: 75, y: 0, width: 43, font: labelFont)
-        text(isGo ? "1月" : "1周", x: 75, y: 15, width: 43, font: labelFont)
+        text("5h", x: 75, y: 0, width: 43, font: labelFont)
+        text(isGo ? "1mo" : "1w", x: 75, y: 15, width: 43, font: labelFont)
         drawQuota(primary, y: 0)
         drawQuota(secondary, y: 15)
-        text("今日 " + token(snapshot.todayTokens), x: 552, y: 0, width: 150, font: tokenFont)
-        let other = isGo ? "Go 周 " + balance(snapshot.goWeekly) : "Go 5h " + balance(snapshot.goRolling)
+        text("Today " + token(snapshot.todayTokens), x: 552, y: 0, width: 150, font: tokenFont)
+        let other = isGo ? "Go Wk " + balance(snapshot.goWeekly) : "Go 5h " + balance(snapshot.goRolling)
         text(other, x: 552, y: 15, width: 150, font: tokenFont, color: muted)
     }
 
@@ -74,17 +74,17 @@ final class ZCodeTouchBarView: NSView {
 
     private func drawDetails() {
         let windows: [(String, ZCodeQuota?)] = [
-            ("Go 5h", snapshot.goRolling), ("Go 周", snapshot.goWeekly),
-            ("Go 月", snapshot.goMonthly), ("GLM 5h", snapshot.glmPrimary),
-            ("GLM 周", snapshot.glmWeekly)
+            ("Go 5h", snapshot.goRolling), ("Go Wk", snapshot.goWeekly),
+            ("Go Mo", snapshot.goMonthly), ("GLM 5h", snapshot.glmPrimary),
+            ("GLM Wk", snapshot.glmWeekly)
         ]
         for (index, entry) in windows.enumerated() {
             let x = CGFloat(8 + index * 105)
             text(entry.0 + " " + balance(entry.1), x: x, y: 0, width: 101, font: dateFont)
             text(date(entry.1?.resetsAt), x: x, y: 15, width: 101, font: dateFont, color: muted)
         }
-        text("今日 " + token(snapshot.todayTokens), x: 543, y: 0, width: 169, font: tokenFont)
-        text("累计 " + token(snapshot.cumulativeTokens), x: 543, y: 15, width: 169, font: tokenFont)
+        text("Today " + token(snapshot.todayTokens), x: 543, y: 0, width: 169, font: tokenFont)
+        text("Lifetime " + token(snapshot.cumulativeTokens), x: 543, y: 15, width: 169, font: tokenFont)
     }
 
     private func token(_ count: Int?) -> String {
