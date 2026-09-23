@@ -1,8 +1,15 @@
 # Changelog
 
-All notable changes to Codex Touch Bar Usage are documented here.
+All notable changes to Codex Usage Bar are documented here.
 
 ## Unreleased
+
+## [0.3.7] - 2026-09-22
+
+### Changed
+
+- Show English 5-hour and weekly Codex usage percentages on the Touch Bar.
+- Publish a fork-owned Homebrew cask and Apple Silicon release for Codex Usage Bar.
 
 - Add a separate ZCode panel for GLM and OpenCode Go quota balances, with
   incremental local token statistics and tap-to-expand details.
@@ -88,6 +95,7 @@ All notable changes to Codex Touch Bar Usage are documented here.
 - Local JSONL token totals remain fallback-only and no longer replace official account totals.
 - All-zero and stale snapshots are rejected before they can replace valid quota data.
 
+[0.3.7]: https://github.com/ne0guy/codex-touchbar-usage/releases/tag/v0.3.7
 [0.3.6]: https://github.com/Daytimeflow/codex-touchbar-usage/releases/tag/v0.3.6
 [0.3.5]: https://github.com/Daytimeflow/codex-touchbar-usage/releases/tag/v0.3.5
 [0.3.4]: https://github.com/Daytimeflow/codex-touchbar-usage/releases/tag/v0.3.4

@@ -1,6 +1,6 @@
-Codex Touch Bar Usage (Apple Silicon)
+Codex Usage Bar (Apple Silicon)
 
-Shows Codex quota balance, reset cards, reset times, yesterday's token usage,
+Shows Codex five-hour and weekly usage, reset times, yesterday's token usage,
 and lifetime token usage while Codex is frontmost.
 
 Install:
@@ -22,4 +22,4 @@ the downloaded archive checksum, then approve it in System Settings >
 Privacy & Security > Open Anyway.
 
 Project:
-  https://github.com/Daytimeflow/codex-touchbar-usage
+  https://github.com/ne0guy/codex-touchbar-usage

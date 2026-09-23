@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="assets/logo.svg" width="112" alt="Codex Touch Bar Usage logo">
-  <h1>Codex Touch Bar Usage</h1>
+  <img src="assets/logo.svg" width="112" alt="Codex Usage Bar logo">
+  <h1>Codex Usage Bar</h1>
   <p>
     专为 Codex 打造的 MacBook Pro Touch Bar 用量插件。
   </p>
@@ -16,7 +16,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-111?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/Daytimeflow/codex-touchbar-usage/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
 [![macOS](https://img.shields.io/badge/macOS-Touch%20Bar-111?style=flat-square&logo=apple)](#系统要求)
 [![Swift](https://img.shields.io/badge/Swift-native%20AppKit-F05138?style=flat-square&logo=swift&logoColor=white)](helper/CodexTouchBarHelper)
 [![Codex](https://img.shields.io/badge/Codex-Touch%20Bar%20Plugin-8DFF55?style=flat-square)](#功能)
@@ -24,13 +24,13 @@
 
 </div>
 
-![Codex Touch Bar Usage 动态效果](assets/demo.gif)
+![Codex Usage Bar 动态效果](assets/demo.gif)
 
 <p align="center"><sub>聚焦 Codex 时显示额度、重置卡与 token 用量；切换到其他 App 后自动恢复系统控制条。</sub></p>
 
 ## 概述
 
-**Codex Touch Bar Usage** 是一个专为 Codex 高频用户打造的原生 Touch Bar 插件，把最常查看的 Codex 用量信息直接放到键盘上方。
+**Codex Usage Bar** 是一个专为 Codex 高频用户打造的原生 Touch Bar 插件，把最常查看的 Codex 用量信息直接放到键盘上方。
 
 当 Codex 成为前台 App 时，它会临时接管 Touch Bar 展示一条紧凑的用量面板；切走到其他 App 后自动隐藏，系统亮度、音量等控制条会恢复。
 
@@ -51,7 +51,7 @@
 
 源码新增 **ZCode 扩展**：聚焦 ZCode 时显示 GLM / OpenCode Go 余额与今日 token，点按查看完整额度和累计统计；Codex 原面板保持不变。此前发布的安装包尚不含此扩展，使用当前源码安装。数据口径和使用方式见 [ZCode 说明](docs/zcode-usage.md)。
 
-| 设计重点 | Codex Touch Bar Usage |
+| 设计重点 | Codex Usage Bar |
 | --- | --- |
 | Codex 专属 | 围绕官方主额度、重置卡、重置时间、昨日 / 累计 token 设计，不做无关仪表盘 |
 | 官方账户口径 | 优先读取 Codex 官方 app-server 数据，token 数值与个人资料页保持同一口径 |
@@ -83,7 +83,8 @@
 ### Homebrew（推荐）
 
 ```bash
-brew install --cask daytimeflow/tap/codex-touchbar-usage
+brew tap ne0guy/codex-usage-bar https://github.com/ne0guy/codex-touchbar-usage.git
+brew install --cask ne0guy/codex-usage-bar/codex-usage-bar
 ```
 
 Cask 会自动安装 helper、注册 LaunchAgent 并立即启动，无需再执行 `brew services start`。
@@ -92,17 +93,17 @@ Cask 会自动安装 helper、注册 LaunchAgent 并立即启动，无需再执�
 
 ```bash
 brew update
-brew upgrade --cask codex-touchbar-usage
+brew upgrade --cask codex-usage-bar
 ```
 
 ### GitHub Release（Apple Silicon）
 
-从 [Releases](https://github.com/Daytimeflow/codex-touchbar-usage/releases/latest) 下载 `CodexTouchBarUsage-v0.3.6-arm64.zip` 和对应的 `.sha256`：
+从 [Releases](https://github.com/ne0guy/codex-touchbar-usage/releases/latest) 下载 `CodexUsageBar-v0.3.7-arm64.zip` 和对应的 `.sha256`：
 
 ```bash
-shasum -a 256 -c CodexTouchBarUsage-v0.3.6-arm64.zip.sha256
-unzip CodexTouchBarUsage-v0.3.6-arm64.zip
-cd CodexTouchBarUsage-v0.3.6-arm64
+shasum -a 256 -c CodexUsageBar-v0.3.7-arm64.zip.sha256
+unzip CodexUsageBar-v0.3.7-arm64.zip
+cd CodexUsageBar-v0.3.7-arm64
 ./install.sh
 ```
 
@@ -111,7 +112,7 @@ cd CodexTouchBarUsage-v0.3.6-arm64
 ### 源码安装
 
 ```bash
-git clone https://github.com/Daytimeflow/codex-touchbar-usage.git
+git clone https://github.com/ne0guy/codex-touchbar-usage.git
 cd codex-touchbar-usage
 ./scripts/install_touchbar_helper.sh
 ```
@@ -154,7 +155,7 @@ Homebrew 安装：
 
 ```bash
 brew update
-brew upgrade --cask codex-touchbar-usage
+brew upgrade --cask codex-usage-bar
 ```
 
 源码安装：
@@ -169,7 +170,7 @@ git pull
 Homebrew 安装：
 
 ```bash
-brew uninstall --cask codex-touchbar-usage
+brew uninstall --cask codex-usage-bar
 ```
 
 Release 安装（在解压目录中）：

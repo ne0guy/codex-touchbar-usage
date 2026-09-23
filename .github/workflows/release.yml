@@ -1,0 +1,55 @@
+name: Build and publish Apple Silicon release
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - "Casks/**"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: codex-usage-bar-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release archive
+        run: ./scripts/package_release.sh
+
+      - name: Publish release and update cask
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(/usr/bin/plutil -extract version raw .codex-plugin/plugin.json)"
+          TAG="v${VERSION}"
+          ARCHIVE="CodexUsageBar-v${VERSION}-arm64"
+          mkdir -p dist
+
+          if gh release view "${TAG}" >/dev/null 2>&1; then
+            gh release download "${TAG}" --pattern "${ARCHIVE}.zip" --pattern "${ARCHIVE}.zip.sha256" --dir dist
+          else
+            gh release create "${TAG}" "dist/${ARCHIVE}.zip" "dist/${ARCHIVE}.zip.sha256" \
+              --title "Codex Usage Bar ${VERSION}" --generate-notes
+          fi
+
+          SHA256="$(awk 'NR == 1 { print $1 }' "dist/${ARCHIVE}.zip.sha256")"
+          [[ "${SHA256}" =~ ^[0-9a-f]{64}$ ]]
+          mkdir -p Casks
+          sed -e "s|@VERSION@|${VERSION}|g" -e "s|@SHA256@|${SHA256}|g" \
+            packaging/codex-usage-bar.rb.template > Casks/codex-usage-bar.rb
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/codex-usage-bar.rb
+          if ! git diff --cached --quiet; then
+            git commit -m "Update Homebrew cask for ${TAG}"
+            git push origin HEAD:main
+          fi

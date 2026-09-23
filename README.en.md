@@ -1,6 +1,6 @@
 <div align="center">
-  <img src="assets/logo.svg" width="112" alt="Codex Touch Bar Usage logo">
-  <h1>Codex Touch Bar Usage</h1>
+  <img src="assets/logo.svg" width="112" alt="Codex Usage Bar logo">
+  <h1>Codex Usage Bar</h1>
   <p>
     A native MacBook Pro Touch Bar usage plugin built for Codex.
   </p>
@@ -16,7 +16,7 @@
 <div align="center">
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-111?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/Daytimeflow/codex-touchbar-usage/releases/latest)
+[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
 [![macOS](https://img.shields.io/badge/macOS-Touch%20Bar-111?style=flat-square&logo=apple)](#requirements)
 [![Swift](https://img.shields.io/badge/Swift-native%20AppKit-F05138?style=flat-square&logo=swift&logoColor=white)](helper/CodexTouchBarHelper)
 [![Codex](https://img.shields.io/badge/Codex-Touch%20Bar%20Plugin-8DFF55?style=flat-square)](#features)
@@ -24,13 +24,13 @@
 
 </div>
 
-![Codex Touch Bar Usage animated demo](assets/demo.gif)
+![Codex Usage Bar animated demo](assets/demo.gif)
 
-<p align="center"><sub>Quota, reset cards, and token usage appear when Codex is focused; system controls return when you switch away.</sub></p>
+<p align="center"><sub>Five-hour and weekly usage percentages appear when Codex is focused; system controls return when you switch away.</sub></p>
 
 ## Overview
 
-**Codex Touch Bar Usage** is a native Touch Bar plugin built specifically for frequent Codex users. It puts the usage information you keep checking directly above your keyboard.
+**Codex Usage Bar** is a native Touch Bar plugin built specifically for frequent Codex users. It puts the usage information you keep checking directly above your keyboard.
 
 When Codex is the frontmost app, the helper temporarily presents a compact usage panel on the Touch Bar. When you switch away, it hides automatically and the system Control Strip, including brightness and volume controls, comes back.
 
@@ -41,8 +41,7 @@ It is not Electron, not a WebView, and not a fragile pile of separate Touch Bar 
 | Module | What it shows |
 | --- | --- |
 | Identity | White italic `Codex` title |
-| Main quota | Automatically detects the official window duration and shows balance capsules, remaining amount, and reset time |
-| Reset cards | Shows the available count and earliest expiration so earned resets do not expire unnoticed |
+| Codex quota | Shows 5-hour and weekly usage percentages, remaining bars, and reset times |
 | Token usage | Yesterday's tokens and lifetime tokens, formatted in `万` / `亿` units |
 | Frontmost app awareness | Shows only when Codex is focused, hides when you switch away |
 | Lightweight refresh | Normally refreshes about every 30 seconds; after a reset card is used, follows up about every 8 seconds for up to 3 minutes; stops while hidden |
@@ -51,18 +50,18 @@ It is not Electron, not a WebView, and not a fragile pile of separate Touch Bar 
 
 This source checkout adds **ZCode support**: GLM / OpenCode Go balances and today's local tokens while ZCode is focused, with tap-to-expand quota details. The Codex panel is preserved. Previously published archives do not include this extension; install from this checkout. See [ZCode usage](docs/zcode-usage.md) for details and data definitions.
 
-| Design priority | Codex Touch Bar Usage |
+| Design priority | Codex Usage Bar |
 | --- | --- |
-| Codex-first | Built around official main quota, reset cards, reset times, and yesterday / lifetime tokens instead of a generic dashboard |
+| Codex-first | Built around official 5-hour and weekly quotas, reset times, and yesterday / lifetime tokens instead of a generic dashboard |
 | Official account totals | Prefers the official Codex app-server data, matching the token totals shown on the profile page |
 | Focus-aware | Appears only while Codex / ChatGPT is frontmost, then restores brightness, volume, and other system controls |
 | Native and lightweight | One Swift + AppKit custom view with no Electron / WebView; app focus is event-driven and refresh stops while hidden |
-| Complete at a glance | Partial-fill balance capsules plus remaining percentages, reset-card count, earliest expiration, and account token totals |
+| Complete at a glance | 5-hour and weekly balance bars with remaining percentages, reset times, and account token totals |
 
 ## Who Is This For
 
 - People who use Codex, Codex CLI, or Codex Desktop for long sessions every day;
-- People who want to know how much main Codex quota remains and whether a reset card is close to expiring;
+- People who want to know how much 5-hour and weekly Codex quota remains;
 - People who want yesterday and lifetime token usage without opening the profile page repeatedly;
 - People with a Touch Bar MacBook Pro who want that strip to be useful again.
 
@@ -83,7 +82,8 @@ Keywords: `Codex Touch Bar`, `Codex usage`, `Codex token tracker`, `Codex quota`
 ### Homebrew (recommended)
 
 ```bash
-brew install --cask daytimeflow/tap/codex-touchbar-usage
+brew tap ne0guy/codex-usage-bar https://github.com/ne0guy/codex-touchbar-usage.git
+brew install --cask ne0guy/codex-usage-bar/codex-usage-bar
 ```
 
 The cask installs the helper, registers its LaunchAgent, and starts it immediately. No separate `brew services start` command is needed.
@@ -92,17 +92,17 @@ Upgrade:
 
 ```bash
 brew update
-brew upgrade --cask codex-touchbar-usage
+brew upgrade --cask codex-usage-bar
 ```
 
 ### GitHub Release (Apple Silicon)
 
-Download `CodexTouchBarUsage-v0.3.6-arm64.zip` and its `.sha256` file from [Releases](https://github.com/Daytimeflow/codex-touchbar-usage/releases/latest):
+Download `CodexUsageBar-v0.3.7-arm64.zip` and its `.sha256` file from [Releases](https://github.com/ne0guy/codex-touchbar-usage/releases/latest):
 
 ```bash
-shasum -a 256 -c CodexTouchBarUsage-v0.3.6-arm64.zip.sha256
-unzip CodexTouchBarUsage-v0.3.6-arm64.zip
-cd CodexTouchBarUsage-v0.3.6-arm64
+shasum -a 256 -c CodexUsageBar-v0.3.7-arm64.zip.sha256
+unzip CodexUsageBar-v0.3.7-arm64.zip
+cd CodexUsageBar-v0.3.7-arm64
 ./install.sh
 ```
 
@@ -111,7 +111,7 @@ The prebuilt app is ad-hoc signed and not yet Apple-notarized. Verify its SHA-25
 ### Install from source
 
 ```bash
-git clone https://github.com/Daytimeflow/codex-touchbar-usage.git
+git clone https://github.com/ne0guy/codex-touchbar-usage.git
 cd codex-touchbar-usage
 ./scripts/install_touchbar_helper.sh
 ```
@@ -154,7 +154,7 @@ Homebrew installation:
 
 ```bash
 brew update
-brew upgrade --cask codex-touchbar-usage
+brew upgrade --cask codex-usage-bar
 ```
 
 Source installation:
@@ -169,7 +169,7 @@ git pull
 Homebrew installation:
 
 ```bash
-brew uninstall --cask codex-touchbar-usage
+brew uninstall --cask codex-usage-bar
 ```
 
 Release installation (from the extracted folder):
