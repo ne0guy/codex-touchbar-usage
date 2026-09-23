@@ -98,7 +98,7 @@ final class UsageTouchBarView: NSView {
             UsageFormatting.balanceLabel(usedPercent: windows.weekly?.usedPercent),
             in: NSRect(x: percentX, y: row2Y, width: 42, height: textHeight),
             font: valueFont,
-            color: snapshot.resetCreditsAvailable == 0 ? muted : white,
+            color: windows.weekly == nil ? muted : white,
             alignment: .right
         )
 
