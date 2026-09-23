@@ -140,7 +140,6 @@ public final class UsageStore {
         if let apiRateLimit {
             let primary = limitFromAPIWindow(name: "codex", payload: apiRateLimit["primary_window"])
             let secondary = limitFromAPIWindow(name: "secondary", payload: apiRateLimit["secondary_window"])
-                ?? additionalLimitFromAPI(raw)
             return UsageSnapshot(
                 primary: primary,
                 secondary: secondary,
@@ -447,22 +446,5 @@ public final class UsageStore {
         )
     }
 
-    private func additionalLimitFromAPI(_ raw: JSONObject) -> LimitWindow? {
-        guard let limits = raw["additional_rate_limits"] as? [JSONObject] else { return nil }
-        let ordered = limits.sorted {
-            stringValue($0["metered_feature"]) == "codex_bengalfox"
-                && stringValue($1["metered_feature"]) != "codex_bengalfox"
-        }
-        for item in ordered {
-            guard let rateLimit = item["rate_limit"] as? JSONObject else { continue }
-            let name = stringValue(item["limit_name"])
-                ?? stringValue(item["metered_feature"])
-                ?? "additional"
-            if let window = limitFromAPIWindow(name: name, payload: rateLimit["primary_window"])
-                ?? limitFromAPIWindow(name: name, payload: rateLimit["secondary_window"]) {
-                return window
-            }
-        }
-        return nil
-    }
+
 }
