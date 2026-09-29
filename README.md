@@ -1,115 +1,80 @@
 <div align="center">
-  <img src="assets/logo.svg" width="112" alt="Codex Usage Bar logo">
+  <img src="assets/app-icon.png" width="112" alt="Codex Usage Bar app icon">
   <h1>Codex Usage Bar</h1>
-  <p>
-    专为 Codex 打造的 MacBook Pro Touch Bar 用量插件。
-  </p>
-  <p>
-    把 Codex 额度余额、重置卡、重置时间和 token 用量放进 Touch Bar。
-  </p>
-</div>
-
-<p align="center">
-  <strong>简体中文</strong> · <a href="README.en.md">English</a>
-</p>
-
-<div align="center">
+  <p>Customize the Codex usage information on your MacBook Pro Touch Bar.</p>
+  <p>Five-hour and weekly limits, reset times, and token counts—right above your keyboard.</p>
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-111?style=flat-square)](LICENSE)
-[![Release](https://img.shields.io/github/v/release/Daytimeflow/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
-[![macOS](https://img.shields.io/badge/macOS-Touch%20Bar-111?style=flat-square&logo=apple)](#系统要求)
-[![Swift](https://img.shields.io/badge/Swift-native%20AppKit-F05138?style=flat-square&logo=swift&logoColor=white)](helper/CodexTouchBarHelper)
-[![Codex](https://img.shields.io/badge/Codex-Touch%20Bar%20Plugin-8DFF55?style=flat-square)](#功能)
-[![Homebrew](https://img.shields.io/badge/Homebrew-tap-FBB040?style=flat-square&logo=homebrew&logoColor=111)](#安装)
+[![Release](https://img.shields.io/github/v/release/ne0guy/codex-touchbar-usage?style=flat-square&color=8DFF55)](https://github.com/ne0guy/codex-touchbar-usage/releases/latest)
+[![macOS](https://img.shields.io/badge/macOS-12%2B-111?style=flat-square&logo=apple)](#requirements)
+[![Swift](https://img.shields.io/badge/Swift-AppKit-F05138?style=flat-square&logo=swift&logoColor=white)](helper/CodexTouchBarHelper)
 
 </div>
 
-![Codex Usage Bar 动态效果](assets/demo.gif)
+**Created originally by [Daytimeflow](https://github.com/Daytimeflow).** This is a fork of [Daytimeflow/codex-touchbar-usage](https://github.com/Daytimeflow/codex-touchbar-usage), maintained by [ne0guy](https://github.com/ne0guy). The original project provides the native Touch Bar helper and Codex usage foundation. This fork adds a customization window, a more compact layout, English presentation, and a new app icon. The original MIT copyright notice is retained in [LICENSE](LICENSE).
 
-<p align="center"><sub>聚焦 Codex 时显示额度、重置卡与 token 用量；切换到其他 App 后自动恢复系统控制条。</sub></p>
+## What it does
 
-## 概述
+Codex Usage Bar shows a native usage panel while Codex or its ChatGPT desktop shell is in the foreground. Switch to another app and the panel hides, restoring the system Touch Bar controls.
 
-**Codex Usage Bar** 是一个专为 Codex 高频用户打造的原生 Touch Bar 插件，把最常查看的 Codex 用量信息直接放到键盘上方。
+Version **0.4.0** adds a Mac settings window. Choose the details you want to see, preview your changes immediately, and save your preferences automatically.
 
-当 Codex 成为前台 App 时，它会临时接管 Touch Bar 展示一条紧凑的用量面板；切走到其他 App 后自动隐藏，系统亮度、音量等控制条会恢复。
+<p align="center">
+  <img src="assets/customization.png" width="820" alt="Native customization window with a Touch Bar preview, display checkboxes, and style options">
+</p>
 
-它不是 Electron/WebView，也不是简单拼接多个 Touch Bar item。核心 UI 是一个 AppKit 自绘 `NSTouchBar` custom view，布局稳定、刷新轻、响应快。
+The screenshot uses example usage data. When available, the settings preview shows your latest usage snapshot.
 
-## 功能
+## Features
 
-| 模块 | 显示内容 |
+| Feature | Options |
 | --- | --- |
-| 标识 | `Codex` 白色斜体标题 |
-| 主额度 | 自动识别官方窗口时长，显示余额胶囊条、余额百分比、重置时间 |
-| 重置卡 | 显示可用张数和最早到期时间，避免卡片闲置过期 |
-| token 用量 | 昨日 token、累计 token，按 `万` / `亿` 格式显示 |
-| 前台感知 | 只在 Codex 聚焦时显示，切走后隐藏 |
-| 轻量刷新 | 常规约 30 秒刷新；检测到使用重置卡后约 8 秒追踪一次、最长 3 分钟；隐藏时停止刷新 |
+| Usage windows | Five-hour usage, weekly usage, or both |
+| Display columns | Usage bars, percentages, reset dates and times |
+| Token counts | Yesterday's tokens, lifetime tokens, or both |
+| Usage mode | Remaining or used usage |
+| Bar style | Standard or compact width; lime, sky blue, or amber |
+| Layout | Hidden columns collapse; single rows are centered |
+| Preferences | Saved on this Mac; restore the compact default layout with one click |
+| Focus awareness | Appears while Codex is in the foreground; hides when you switch away |
+| ZCode support | Separate GLM / OpenCode Go usage panel with tap-to-expand details |
 
-## 为什么是它
+Low remaining quota uses warning colors. Codex customization settings apply to the Codex panel; ZCode keeps its existing layout. See [ZCode usage](docs/zcode-usage.md) for provider setup and data definitions.
 
-源码新增 **ZCode 扩展**：聚焦 ZCode 时显示 GLM / OpenCode Go 余额与今日 token，点按查看完整额度和累计统计；Codex 原面板保持不变。此前发布的安装包尚不含此扩展，使用当前源码安装。数据口径和使用方式见 [ZCode 说明](docs/zcode-usage.md)。
+## Requirements
 
-| 设计重点 | Codex Usage Bar |
-| --- | --- |
-| Codex 专属 | 围绕官方主额度、重置卡、重置时间、昨日 / 累计 token 设计，不做无关仪表盘 |
-| 官方账户口径 | 优先读取 Codex 官方 app-server 数据，token 数值与个人资料页保持同一口径 |
-| 前台即用 | 只在 Codex / ChatGPT 位于前台时显示，切走后恢复亮度、音量等系统控制 |
-| 原生轻量 | Swift + AppKit 单一自绘视图，无 Electron / WebView；前台切换由系统事件驱动，隐藏时零刷新 |
-| 信息完整 | 余额胶囊条支持部分填充，同时展示余额百分比、重置卡数量、最早到期时间和账户 token 用量 |
+- A MacBook Pro with a Touch Bar, running macOS 12 or later.
+- The prebuilt release and Homebrew cask require Apple Silicon.
+- Codex installed and signed in locally, with Codex CLI credentials available in `~/.codex/auth.json` (or your configured Codex home).
+- Source builds require Swift through Xcode or Command Line Tools. Prebuilt installations do not require Swift.
 
-## 适合谁
+The helper uses private macOS system-modal Touch Bar APIs. This release is intended for direct installation, rather than the Mac App Store.
 
-- 每天长时间使用 Codex / Codex CLI / Codex Desktop 的用户；
-- 想随时知道 Codex 主额度还剩多少、重置卡是否快过期的人；
-- 想看昨日和累计 token 消耗，但不想频繁打开个人资料页的人；
-- 还在用带 Touch Bar 的 MacBook Pro，想让这条屏幕重新有点存在感的人。
+## Installation
 
-关键词：`Codex Touch Bar`、`Codex 用量`、`Codex token 统计`、`Codex quota`、`MacBook Pro Touch Bar plugin`。
-
-## 系统要求
-
-- 带 Touch Bar 的 MacBook Pro
-- macOS 12 或更新版本
-- 已安装最新版 Codex / ChatGPT 桌面应用（新版外壳仍使用 Codex 服务）
-- 已登录 Codex，且本机存在 `~/.codex/auth.json`
-- Homebrew / GitHub Release 安装无需 Swift；源码安装需要完整 Xcode 或 Command Line Tools
-
-> 说明：当前项目使用 macOS 私有的 system-modal Touch Bar 能力，目标是本机自用与开源学习，不以 App Store 分发兼容为目标。
-
-## 安装
-
-### Homebrew（推荐）
+### Homebrew
 
 ```bash
 brew tap ne0guy/codex-usage-bar https://github.com/ne0guy/codex-touchbar-usage.git
 brew install --cask ne0guy/codex-usage-bar/codex-usage-bar
 ```
 
-Cask 会自动安装 helper、注册 LaunchAgent 并立即启动，无需再执行 `brew services start`。
+The cask installs the app, registers its LaunchAgent, and starts it. No `brew services start` command is needed.
 
-升级：
+### GitHub release
 
-```bash
-brew update
-brew upgrade --cask codex-usage-bar
-```
-
-### GitHub Release（Apple Silicon）
-
-从 [Releases](https://github.com/ne0guy/codex-touchbar-usage/releases/latest) 下载 `CodexUsageBar-v0.3.7-arm64.zip` 和对应的 `.sha256`：
+Download `CodexUsageBar-v0.4.0-arm64.zip` and `CodexUsageBar-v0.4.0-arm64.zip.sha256` from the [0.4.0 release](https://github.com/ne0guy/codex-touchbar-usage/releases/tag/v0.4.0). Place both files in the same folder, then run:
 
 ```bash
-shasum -a 256 -c CodexUsageBar-v0.3.7-arm64.zip.sha256
-unzip CodexUsageBar-v0.3.7-arm64.zip
-cd CodexUsageBar-v0.3.7-arm64
+shasum -a 256 -c CodexUsageBar-v0.4.0-arm64.zip.sha256
+unzip CodexUsageBar-v0.4.0-arm64.zip
+cd CodexUsageBar-v0.4.0-arm64
 ./install.sh
 ```
 
-预构建包采用 ad-hoc 签名，暂未经过 Apple notarization。请先校验 SHA-256；如果 Gatekeeper 阻止启动，到“系统设置 → 隐私与安全”找到拦截提示，确认“仍要打开”，然后重新启动 helper。也可以改用源码安装，在本机完成编译。
+The installer upgrades an existing installation and enables startup at login. The package is ad-hoc signed and has not been Apple-notarized. After verifying the checksum, if macOS blocks it, approve **Open Anyway** in **System Settings → Privacy & Security** and start the app again.
 
-### 源码安装
+### From source
 
 ```bash
 git clone https://github.com/ne0guy/codex-touchbar-usage.git
@@ -117,230 +82,135 @@ cd codex-touchbar-usage
 ./scripts/install_touchbar_helper.sh
 ```
 
-安装脚本会：
+The app is installed to `~/Applications/CodexTouchBarHelper.app`. Its LaunchAgent is stored at `~/Library/LaunchAgents/com.local.codex-touchbar-helper.plist`.
 
-- 构建原生 Swift helper；
-- 安装到 `~/Applications/CodexTouchBarHelper.app`；
-- 注册 LaunchAgent：`~/Library/LaunchAgents/com.local.codex-touchbar-helper.plist`；
-- 设置登录后自启动；
-- 启动后台 helper。
+## Customize your Touch Bar
 
-打开 Codex 并让它成为前台窗口，Touch Bar 就会显示用量面板。
+1. Click the chart icon in the Mac menu bar and choose **Customize Touch Bar…**. You can also reopen the app from Finder. Settings open automatically on the first launch of this version.
+2. Select the usage windows, columns, and token counts you want to display.
+3. Choose remaining or used usage, bar width, and color.
+4. Check the preview. Changes save automatically and apply to the live Codex panel.
+5. Choose **Restore defaults** to return to the compact layout, or **Done** to close settings.
 
-## 手动启动
+Focus Codex to see your chosen layout on the Touch Bar. **Quit Codex Usage Bar** in the menu stops the helper until you reopen it or log in again.
 
-如果重启后没有看到 Touch Bar 面板，先手动启动一次：
+See [customization details](docs/customization.md) for more information.
 
-```bash
-./scripts/start_touchbar_helper.sh
-```
+## Update or uninstall
 
-检查状态：
-
-```bash
-launchctl print-disabled gui/$(id -u) | grep com.local.codex-touchbar-helper
-launchctl print gui/$(id -u)/com.local.codex-touchbar-helper
-```
-
-预期能看到：
-
-```text
-com.local.codex-touchbar-helper => enabled
-state = running
-```
-
-## 更新
-
-Homebrew 安装：
+For Homebrew installations:
 
 ```bash
 brew update
 brew upgrade --cask codex-usage-bar
 ```
 
-源码安装：
+To uninstall:
+
+```bash
+brew uninstall --cask codex-usage-bar
+```
+
+For release installations, run `./install.sh` from the new release folder to upgrade, or `./uninstall.sh` from the extracted folder to remove the app.
+
+For source installations:
 
 ```bash
 git pull
 ./scripts/install_touchbar_helper.sh
 ```
 
-## 卸载
-
-Homebrew 安装：
-
-```bash
-brew uninstall --cask codex-usage-bar
-```
-
-Release 安装（在解压目录中）：
-
-```bash
-./uninstall.sh
-```
-
-源码安装（在仓库目录中）：
+To uninstall from the repository:
 
 ```bash
 ./scripts/uninstall_touchbar_helper.sh
 ```
 
-它会移除：
+Uninstalling removes the app and LaunchAgent. It does not remove your Codex login or session history.
 
-- `~/Applications/CodexTouchBarHelper.app`
-- `~/Library/LaunchAgents/com.local.codex-touchbar-helper.plist`
-- 正在运行的 `CodexTouchBarHelper` 进程
+## Data and privacy
 
-不会删除你的 Codex 登录信息，也不会删除 `~/.codex`。
-
-## 数据来源
-
-| 数据 | 来源 |
+| Information | Source |
 | --- | --- |
-| 额度余额 / 重置时间 | Codex 官方 app-server `account/rateLimits/read` |
-| 重置卡 | 同一次 `account/rateLimits/read` 返回的卡片明细；app-server 不可用时回退到 `wham/rate-limit-reset-credits` |
-| 昨日 / 累计 token | Codex 官方 app-server `account/usage/read`，与个人资料页同口径 |
-| 本地降级 | Codex session JSONL 与 usage cache；官方数据不可用时启用 |
-| 缓存 | `~/.codex/touchbar-usage/` |
+| Codex quota and reset times | Codex app-server `account/rateLimits/read`, with an official usage-endpoint fallback |
+| Yesterday's and lifetime tokens | Codex app-server `account/usage/read`, when available |
+| Local token fallback | Codex session JSONL and cached usage |
+| Helper caches and logs | `~/.codex/touchbar-usage/`, or the equivalent under your configured Codex home |
 
-隐私原则：
+The helper reads local credentials to query usage services. It does not upload local session contents or log access tokens. Official account totals take precedence when available; local token totals can differ because they depend on retained session history.
 
-- 不上传本地 session 内容；
-- 不记录或打印 access token；
-- 本地只缓存重置卡数量和最早到期时间，不保存卡片 ID 与说明；
-- helper 隐藏时不刷新 UI、不请求网络；
-- app-server 只在刷新官方数据时短暂启动，读取完成立即退出，不增加常驻进程。
+Official usage normally refreshes about every 30 seconds while Codex is in the foreground. Local token data is checked more frequently. Refresh timers stop when you switch away. After a reset-credit count decreases, the helper briefly checks for the new quota cycle more often; it displays the returned data rather than assuming the quota has reset.
 
-## 刷新机制
+ZCode uses its own provider credentials and caches. See [ZCode data sources](docs/zcode-usage.md#sources-and-credentials).
 
-- Codex 切到前台时立即请求一次官方数据，之后常规约每 30 秒刷新；
-- 检测到重置卡数量减少后，临时约每 8 秒追踪一次新额度周期，最长 3 分钟；
-- 官方服务可能先更新卡片数量、稍后才更新额度。helper 不会伪造 `100%`，而是在新周期真实返回后立即刷新；
-- 同一时间最多只有一个官方请求；切出 Codex 后计时器和网络刷新都会暂停。
+## Troubleshooting
 
-## 常用命令
-
-打印一次当前快照：
-
-```bash
-~/Applications/CodexTouchBarHelper.app/Contents/MacOS/CodexTouchBarHelper --once-json
-```
-
-只使用本地缓存/session：
-
-```bash
-~/Applications/CodexTouchBarHelper.app/Contents/MacOS/CodexTouchBarHelper --once-json --no-remote
-```
-
-重建本地 token 统计缓存：
-
-```bash
-~/Applications/CodexTouchBarHelper.app/Contents/MacOS/CodexTouchBarHelper --rebuild-token-stats
-```
-
-查看日志：
-
-```bash
-tail -f ~/.codex/touchbar-usage/helper.err.log
-tail -f ~/.codex/touchbar-usage/helper.out.log
-```
-
-如果额度长期不更新，先检查 Codex CLI 登录态。桌面端升级后可能需要重新授权一次：
-
-```bash
-codex login status
-codex login --device-auth
-```
-
-helper 不会读取或复制桌面端私有登录信息，只使用官方 Codex CLI 保存的本机凭据。重新授权后，可用本节开头的 `--once-json` 命令打印官方快照，与 Touch Bar 当前值对比。
-
-## 常见问题
-
-### 这是 Codex 官方插件吗？
-
-不是。它是社区/个人维护的 Codex Touch Bar 用量插件，目标是服务 Codex 用户的本机工作流。项目不会冒充官方，也不会使用 OpenAI / Codex 的商标做官方背书。
-
-### Touch Bar 没有亮
-
-先确认系统 Touch Bar 本身是否工作。如果亮度、音量按钮也不显示，通常是 macOS Touch Bar 服务卡住了，可以尝试：
-
-```bash
-killall ControlStrip
-```
-
-如果仍然全黑，可能需要重启系统级 TouchBarServer：
-
-```bash
-sudo pkill TouchBarServer
-```
-
-### helper 启动了，但没有显示 Codex 面板
-
-确认 Codex 是前台 App：
+**The usage panel does not appear:** make Codex the foreground app, confirm you have signed in locally, and check the helper's status:
 
 ```bash
 launchctl print gui/$(id -u)/com.local.codex-touchbar-helper
 ```
 
-LaunchAgent 默认匹配：
-
-```text
-Codex,ChatGPT,com.openai.codex
-```
-
-如果你使用的是改名版 Codex，可修改 LaunchAgent 中的 `CODEX_TOUCHBAR_TARGET_APPS`。
-
-### 会占用多少存储空间？需要定期清理吗？
-
-helper 自身只在 `~/.codex/touchbar-usage/` 保存小型缓存和诊断日志，通常是 MB 级；安装脚本会轮换超过 2 MB 的 helper 日志。`~/.codex/sessions/` 属于 Codex 的任务历史，不是本插件创建的，删除后会影响历史任务和上下文恢复，因此不要为了清理插件而删除它。
-
-可以分别检查两者大小：
+From a source checkout, you can restart it with:
 
 ```bash
-du -sh ~/.codex/touchbar-usage ~/.codex/sessions
+./scripts/start_touchbar_helper.sh
 ```
 
-### token 用量为什么不是实时逐字跳动？
+**Usage is missing or stale:** inspect a snapshot and the helper log:
 
-右侧数值采用 Codex 个人资料页的官方账户统计，helper 约每 30 秒刷新一次。官方统计本身可能批量更新，因此不会随模型输出逐字变化；本地 JSONL 增量只在官方统计不可用时作为降级数据。
+```bash
+~/Applications/CodexTouchBarHelper.app/Contents/MacOS/CodexTouchBarHelper --once-json
+tail -f ~/.codex/touchbar-usage/helper.err.log
+```
 
-### 使用重置卡后为什么额度不会立刻变化？
+Use `--once-json --no-remote` to inspect local data without refreshing official usage. Token totals may update in batches on the upstream service, so they do not change with every generated character.
 
-官方服务可能先扣减重置卡，再异步切换额度周期。helper 检测到卡片数量减少后会进入最长 3 分钟的短时追踪刷新；正常情况下，新额度一经官方接口返回就会在约 8 秒内显示。若超过 3 分钟仍未变化，可用上面的 `--once-json` 命令确认官方数据是否已经生效。
+**The system Touch Bar is also blank:** check whether brightness and volume controls work in other apps. If the system controls are missing too, restart the Mac before troubleshooting this helper.
 
-## 开发
+Do not delete `~/.codex/sessions/` to clean up the helper; it contains your Codex task history.
 
-构建：
+## Development
+
+Build the app:
 
 ```bash
 ./scripts/build_touchbar_helper.sh
 ```
 
-测试：
+Run native rendering, settings, and layout checks:
+
+```bash
+bash scripts/test_touchbar_ui.sh
+```
+
+Run the core tests when SwiftPM is available:
 
 ```bash
 cd helper/CodexTouchBarHelper
 swift test
 ```
 
-如果当前机器只有 Command Line Tools 且 SwiftPM 不可用，构建脚本会自动 fallback 到直接 `swiftc` 编译。
+The build script falls back to direct `swiftc` compilation when SwiftPM is unavailable. Build an installable release archive and checksum from the repository root:
 
-## 路线图
+```bash
+bash scripts/package_release.sh
+```
 
-- [x] 发布 Apple Silicon 预构建 `.app` Release
-- [x] 支持 Homebrew Tap 一行安装
-- [ ] 增加菜单栏状态入口
-- [ ] 增加可配置刷新间隔
-- [ ] 增加更多 Codex surface 的 token 统计维度
+The icon source is [assets/app-icon.png](assets/app-icon.png). To regenerate the macOS `.icns` sizes:
 
-## 免责声明
+```bash
+bash scripts/generate_app_icon.sh
+```
 
-本项目是非官方 Codex Touch Bar 插件，与 OpenAI / Codex 官方没有隶属、授权或背书关系。Codex 内部接口、session JSONL 结构、Touch Bar system-modal API 都可能随系统或应用版本变化而变化。请自行评估风险后使用。
+The tag [`v1`](https://github.com/ne0guy/codex-touchbar-usage/tree/v1) preserves the compact version before customization. Further customization work uses the `codex/customization-app` branch.
 
-## 支持与赞助
+## Credits and license
 
-如果这个小工具减轻了你的负担，欢迎点一个 Star，也欢迎扫码请作者喝杯咖啡。
+- **Original creator:** [Daytimeflow](https://github.com/Daytimeflow), author of [codex-touchbar-usage](https://github.com/Daytimeflow/codex-touchbar-usage). Thank you for creating and sharing the native Touch Bar usage monitor that this fork builds on.
+- **Fork maintainer:** [ne0guy](https://github.com/ne0guy), responsible for this fork's customization window, compact display, English presentation, app icon, and release updates.
+- **License:** [MIT](LICENSE), with the original `Copyright (c) 2026 Daytimeflow` notice preserved.
 
-| 支付宝 | 微信 |
-| --- | --- |
-| <img src="assets/sponsor/alipay.jpeg" alt="支付宝收款码" width="220"> | <img src="assets/sponsor/wechat.jpeg" alt="微信收款码" width="220"> |
+To support the original creator, visit the [upstream project](https://github.com/Daytimeflow/codex-touchbar-usage). Stars, feedback, and contributions to either project are welcome.
+
+This is a community project and is not affiliated with or endorsed by OpenAI. Codex interfaces and macOS Touch Bar APIs may change across versions.

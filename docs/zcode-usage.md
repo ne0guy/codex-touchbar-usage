@@ -1,8 +1,8 @@
 # ZCode Touch Bar
 
-This source checkout extends the native helper with a ZCode panel. Existing
-Codex rendering, quota interpretation, reset cards, and token labels are preserved.
-Previously published release archives do not include this extension.
+The native helper includes a ZCode panel alongside the customizable Codex panel.
+The ZCode extension is included in the 0.4.0 release. Codex customization settings
+do not change the ZCode layout.
 
 ## Display
 
