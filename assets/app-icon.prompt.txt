@@ -1,0 +1,8 @@
+Generated with the built-in image_gen tool on 2026-09-29.
+
+Prompt:
+Create a finished macOS application icon for Codex Usage Bar, an app that customizes a MacBook Touch Bar usage display. Square 1024x1024 composition, transparent canvas around a large centered rounded-square dark graphite app tile with generous standard macOS icon padding. Tile has subtle charcoal depth, restrained polished satin material and soft rounded corners. In the center a simple bold symbol: two stacked rows of five horizontally elongated rounded capsules representing usage bars. Top row four vivid lime-green capsules and one subdued dark gray capsule, bottom row three vivid lime-green capsules and two subdued dark gray capsules. Beautiful crisp geometry, balanced spacing, legible at 16px, elegant slight highlight and subtle shadow, straight-on view. No text, letters, logos, numbers, border, mockup, device, scenery or watermark. Isolated finished icon asset only.
+
+Transparent background: true.
+Source asset: app-icon.png.
+Regenerate the macOS icon sizes: bash scripts/generate_app_icon.sh

@@ -4,7 +4,7 @@ cask "codex-usage-bar" do
 
   url "https://github.com/ne0guy/codex-touchbar-usage/releases/download/v#{version}/CodexUsageBar-v#{version}-arm64.zip"
   name "Codex Usage Bar"
-  desc "Track Codex 5-hour and weekly usage on the MacBook Pro Touch Bar"
+  desc "Customize Codex usage on the MacBook Pro Touch Bar"
   homepage "https://github.com/ne0guy/codex-touchbar-usage"
 
   depends_on arch: :arm64
@@ -16,5 +16,6 @@ cask "codex-usage-bar" do
   caveats <<~EOS
     The prebuilt Apple Silicon helper does not require Swift.
     It starts automatically at login and appears while Codex or ChatGPT is focused.
+    Use the menu-bar chart icon to customize the displayed usage, token counts, and colors.
   EOS
 end

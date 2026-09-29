@@ -1,5 +1,6 @@
 ## 0.4.0 — Native customization
 
+- Add a macOS app icon with two rows of lime usage bars.
 - Add a menu-bar settings window with a preview and saved preferences.
 - Let users select usage windows, bars, percentages, reset times, and token counts.
 - Add used/remaining display, compact bars, and three accent colors.

@@ -63,6 +63,7 @@ rm -rf "${APP_DIR}"
 mkdir -p "${APP_DIR}/Contents/MacOS" "${APP_DIR}/Contents/Resources"
 cp "${BINARY}" "${APP_DIR}/Contents/MacOS/CodexTouchBarHelper"
 cp "${PACKAGE_DIR}/AppBundle/Info.plist" "${APP_DIR}/Contents/Info.plist"
+cp -R "${PACKAGE_DIR}/AppBundle/Resources/." "${APP_DIR}/Contents/Resources/"
 chmod +x "${APP_DIR}/Contents/MacOS/CodexTouchBarHelper"
 
 echo "Built ${APP_DIR}"
