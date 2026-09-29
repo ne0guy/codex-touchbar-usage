@@ -54,7 +54,10 @@ cat > "${LAUNCH_AGENT}" <<PLIST
   <key>RunAtLoad</key>
   <true/>
   <key>KeepAlive</key>
-  <true/>
+  <dict>
+    <key>SuccessfulExit</key>
+    <false/>
+  </dict>
   <key>StandardOutPath</key>
   <string>${CACHE_DIR}/helper.out.log</string>
   <key>StandardErrorPath</key>

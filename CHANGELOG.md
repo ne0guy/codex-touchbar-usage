@@ -1,3 +1,12 @@
+## 0.4.0 — Native customization
+
+- Add a menu-bar settings window with a preview and saved preferences.
+- Let users select usage windows, bars, percentages, reset times, and token counts.
+- Add used/remaining display, compact bars, and three accent colors.
+- Collapse hidden columns and center single rows.
+- Preserve the compact v1 layout as the default and offer Restore defaults.
+- Allow the installed helper to quit normally while retaining crash recovery.
+
 # Changelog
 
 All notable changes to Codex Usage Bar are documented here.

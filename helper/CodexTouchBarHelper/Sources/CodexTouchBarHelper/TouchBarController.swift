@@ -119,6 +119,10 @@ final class TouchBarController: NSObject, NSTouchBarDelegate {
         }
     }
 
+    func applyPreferences(_ preferences: TouchBarPreferences) {
+        usageView.preferences = preferences
+    }
+
     func update(_ snapshot: UsageSnapshot) {
         guard usageView.snapshot != snapshot else { return }
         usageView.snapshot = snapshot

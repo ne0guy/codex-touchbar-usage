@@ -1,6 +1,6 @@
 {
   "name": "codex-usage-bar",
-  "version": "0.3.7",
+  "version": "0.4.0",
   "description": "Show Codex 5-hour and weekly usage on a MacBook Touch Bar through a native macOS helper.",
   "author": {
     "name": "ne0guy"

@@ -2,6 +2,10 @@ import AppKit
 import CodexTouchBarCore
 
 final class UsageTouchBarView: NSView {
+    var preferences = TouchBarPreferences() {
+        didSet { needsDisplay = true }
+    }
+
     var snapshot: UsageSnapshot? = .placeholder {
         didSet {
             errorMessage = nil
@@ -50,70 +54,41 @@ final class UsageTouchBarView: NSView {
 
         let snapshot = snapshot ?? .placeholder
         let windows = UsageFormatting.trackedWindows(snapshot)
-        let row1Y: CGFloat = 0.0
-        let row2Y: CGFloat = 15.0
-        let textHeight: CGFloat = 15.0
-
-        drawText("5h", in: NSRect(x: 8, y: row1Y, width: 24, height: textHeight), font: labelFont, color: white, alignment: .left)
-        drawText("1w", in: NSRect(x: 8, y: row2Y, width: 24, height: textHeight), font: labelFont, color: white, alignment: .left)
+        let textHeight: CGFloat = 15
+        var rows: [(String, LimitWindow?)] = []
+        if preferences.fiveHour { rows.append(("5h", windows.fiveHour)) }
+        if preferences.weekly { rows.append(("1w", windows.weekly)) }
 
         let barX: CGFloat = 40
-        drawSegmentedBar(
-            x: barX,
-            y: row1Y + 4.5,
-            usedPercent: windows.fiveHour?.usedPercent,
-            segments: 10,
-            segmentWidth: 21,
-            segmentHeight: 7.8,
-            gap: 5.2
-        )
-        drawSegmentedBar(
-            x: barX,
-            y: row2Y + 4.5,
-            usedPercent: windows.weekly?.usedPercent,
-            segments: 10,
-            segmentWidth: 21,
-            segmentHeight: 7.8,
-            gap: 5.2
-        )
+        let percentX = barX + (preferences.bars ? CGFloat(preferences.barColumnWidth) : 0)
+        let dateX = percentX + (preferences.percentages ? 58 : 0)
+        let tokenX = CGFloat(preferences.tokenX)
 
-        let percentX: CGFloat = 312
-        let dateX: CGFloat = 370
-        let tokenX: CGFloat = 468
+        for (index, row) in rows.enumerated() {
+            let y: CGFloat = rows.count == 1 ? 7.5 : CGFloat(index) * 15
+            drawText(row.0, in: NSRect(x: 8, y: y, width: 24, height: textHeight), font: labelFont, color: white, alignment: .left)
+            if preferences.bars {
+                drawSegmentedBar(x: barX, y: y + 4.5, usedPercent: row.1?.usedPercent,
+                                 segments: 10, segmentWidth: CGFloat(preferences.segmentWidth), segmentHeight: 7.8, gap: 5.2)
+            }
+            if preferences.percentages {
+                let value = preferences.showUsed
+                    ? UsageFormatting.percentLabel(row.1?.usedPercent.map { UsageFormatting.clamp($0) })
+                    : UsageFormatting.balanceLabel(usedPercent: row.1?.usedPercent)
+                drawText(value, in: NSRect(x: percentX, y: y, width: 42, height: textHeight), font: valueFont, color: row.1 == nil ? muted : white, alignment: .right)
+            }
+            if preferences.resetTimes {
+                drawText(UsageFormatting.resetLabel(row.1?.resetsAt), in: NSRect(x: dateX, y: y, width: 82, height: textHeight), font: smallMonoFont, color: muted, alignment: .left)
+            }
+        }
 
-        drawText(
-            UsageFormatting.balanceLabel(usedPercent: windows.fiveHour?.usedPercent),
-            in: NSRect(x: percentX, y: row1Y, width: 42, height: textHeight),
-            font: valueFont,
-            color: white,
-            alignment: .right
-        )
-        drawText(
-            UsageFormatting.balanceLabel(usedPercent: windows.weekly?.usedPercent),
-            in: NSRect(x: percentX, y: row2Y, width: 42, height: textHeight),
-            font: valueFont,
-            color: windows.weekly == nil ? muted : white,
-            alignment: .right
-        )
-
-        drawText(
-            UsageFormatting.resetLabel(windows.fiveHour?.resetsAt),
-            in: NSRect(x: dateX, y: row1Y, width: 82, height: textHeight),
-            font: smallMonoFont,
-            color: muted,
-            alignment: .left
-        )
-        drawText(
-            UsageFormatting.resetLabel(windows.weekly?.resetsAt),
-            in: NSRect(x: dateX, y: row2Y, width: 82, height: textHeight),
-            font: smallMonoFont,
-            color: muted,
-            alignment: .left
-        )
-
-        let rows = UsageFormatting.tokenRows(snapshot)
-        drawText(rows.0, in: NSRect(x: tokenX, y: row1Y, width: 150, height: textHeight), font: tokenFont, color: white, alignment: .left)
-        drawText(rows.1, in: NSRect(x: tokenX, y: row2Y, width: 150, height: textHeight), font: tokenFont, color: white, alignment: .left)
+        var tokenRows: [String] = []
+        if preferences.yesterdayTokens { tokenRows.append("Yesterday \(UsageFormatting.tokenCount(snapshot.yesterdayTokens))") }
+        if preferences.lifetimeTokens { tokenRows.append("Lifetime \(UsageFormatting.tokenCount(UsageFormatting.cumulativeTokenCount(snapshot)))") }
+        for (index, text) in tokenRows.enumerated() {
+            let y: CGFloat = tokenRows.count == 1 ? 7.5 : CGFloat(index) * 15
+            drawText(text, in: NSRect(x: tokenX, y: y, width: 150, height: textHeight), font: tokenFont, color: white, alignment: .left)
+        }
 
         if snapshot.source == "placeholder" {
             drawActivityDots()
@@ -152,6 +127,7 @@ final class UsageTouchBarView: NSView {
         gap: CGFloat
     ) {
         let remaining = UsageFormatting.remainingPercent(usedPercent: usedPercent) ?? 0
+        let displayed = preferences.showUsed ? (usedPercent.map { UsageFormatting.clamp($0) } ?? 0) : remaining
         let segmentValue = 100.0 / Double(segments)
 
         for index in 0..<segments {
@@ -168,12 +144,12 @@ final class UsageTouchBarView: NSView {
             let start = Double(index) * segmentValue
             let end = Double(index + 1) * segmentValue
             let fillRatio: Double
-            if remaining <= start {
+            if displayed <= start {
                 fillRatio = 0
-            } else if remaining >= end {
+            } else if displayed >= end {
                 fillRatio = 1
             } else {
-                fillRatio = (remaining - start) / segmentValue
+                fillRatio = (displayed - start) / segmentValue
             }
             guard fillRatio > 0 else { continue }
 
@@ -192,7 +168,8 @@ final class UsageTouchBarView: NSView {
                 width: max(0, min(segmentWidth, fillWidth) - 2.8),
                 height: segmentHeight * 0.34
             )
-            greenTop.withAlphaComponent(isHealthy ? 0.88 : 0.44).setFill()
+            let highlight = preferences.accent == .green ? greenTop : (fillColor.blended(withFraction: 0.6, of: .white) ?? fillColor)
+            highlight.withAlphaComponent(isHealthy ? 0.88 : 0.44).setFill()
             NSBezierPath(
                 roundedRect: highlightRect,
                 xRadius: highlightRect.height / 2,
@@ -205,11 +182,15 @@ final class UsageTouchBarView: NSView {
     private func fillColor(for remaining: Double) -> NSColor {
         if remaining <= 10 { return danger }
         if remaining <= 30 { return warning }
-        return green
+        switch preferences.accent {
+        case .green: return green
+        case .blue: return NSColor(calibratedRed: 0.35, green: 0.78, blue: 1, alpha: 1)
+        case .amber: return NSColor(calibratedRed: 1, green: 0.82, blue: 0.35, alpha: 1)
+        }
     }
 
     private func drawActivityDots() {
-        let baseX: CGFloat = 628
+        let baseX = CGFloat(preferences.contentWidth) - 18
         for index in 0..<4 {
             let alpha = 0.25 + CGFloat(index) * 0.16
             white.withAlphaComponent(alpha).setFill()
@@ -219,6 +200,6 @@ final class UsageTouchBarView: NSView {
 
     private func drawErrorDot() {
         danger.setFill()
-        NSBezierPath(ovalIn: NSRect(x: 633, y: 11.5, width: 4.5, height: 4.5)).fill()
+        NSBezierPath(ovalIn: NSRect(x: CGFloat(preferences.contentWidth) - 13, y: 11.5, width: 4.5, height: 4.5)).fill()
     }
 }

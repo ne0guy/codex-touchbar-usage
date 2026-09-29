@@ -343,3 +343,7 @@ If this little tool saves you a few profile-page checks, a Star is appreciated. 
 | Alipay | WeChat |
 | --- | --- |
 | <img src="assets/sponsor/alipay.jpeg" alt="Alipay QR code" width="220"> | <img src="assets/sponsor/wechat.jpeg" alt="WeChat Pay QR code" width="220"> |
+
+## Native customization (0.4.0)
+
+Use the menu-bar chart icon → **Customize Touch Bar…** to select usage windows, bars, percentages, reset times, and token counts. Preview changes immediately, choose bar width and color, and save preferences automatically. See [customization and packaging](docs/customization.md).

@@ -18,6 +18,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let codexLoader: CodexUsageLoader
     private let zcodeStore = ZCodeUsageStore()
     private let touchBarController = TouchBarController()
+    private var statusItem: NSStatusItem?
+    private var settingsController: SettingsWindowController?
+    private var preferences = TouchBarPreferences.load()
+    private let previewOnly = CommandLine.arguments.contains("--settings-preview")
     private var frontmostMonitor: FrontmostAppMonitor?
     private var localTimer: Timer?
     private var remoteTimer: Timer?
@@ -43,6 +47,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        touchBarController.applyPreferences(preferences)
+        configureMenu()
+        if previewOnly {
+            showSettings(nil)
+            return
+        }
+        if CommandLine.arguments.contains("--settings") || !UserDefaults.standard.bool(forKey: "customizationWelcomeShown") {
+            showSettings(nil)
+            UserDefaults.standard.set(true, forKey: "customizationWelcomeShown")
+        }
         UserDefaults.standard.set(false, forKey: "DFRSystemModalShowsCloseBox")
         frontmostMonitor = FrontmostAppMonitor(targetNames: targetApplicationNames()) { [weak self] target in
             self?.handleTargetChange(target)
@@ -56,6 +70,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 codexSnapshot = cached
                 if ["app-server", "remote"].contains(cached.source) { lastOfficialSnapshot = cached }
                 touchBarController.update(cached)
+                settingsController?.updateSnapshot(cached)
             }
             let cachedZCode = await zcodeStore.cachedSnapshot()
             guard !Task.isCancelled else { return }
@@ -153,6 +168,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 let merged = current.mergingLocalTokenUsage(from: local)
                 codexSnapshot = merged
                 touchBarController.update(merged)
+                settingsController?.updateSnapshot(merged)
             } else {
                 let snapshot = await zcodeStore.refreshLocal()
                 guard !Task.isCancelled, target == requestedTarget, generation == expected else { return }
@@ -218,6 +234,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 lastOfficialSnapshot = stable
                 codexSnapshot = stable
                 touchBarController.update(stable)
+                settingsController?.updateSnapshot(stable)
                 configureResetTimer()
             } catch {
                 if !Task.isCancelled { NSLog("CodexTouchBarHelper: remote refresh failed: %@", error.localizedDescription) }
@@ -241,6 +258,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         resetTimer?.tolerance = 1
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings(nil)
+        return true
+    }
+
+    private func configureMenu() {
+        let menu = NSMenu()
+        let settings = NSMenuItem(title: "Customize Touch Bar…", action: #selector(showSettings), keyEquivalent: ",")
+        settings.target = self
+        menu.addItem(settings)
+        menu.addItem(.separator())
+        let quit = NSMenuItem(title: "Quit Codex Usage Bar", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        quit.target = NSApplication.shared
+        menu.addItem(quit)
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = NSImage(systemSymbolName: "chart.bar", accessibilityDescription: "Codex Usage Bar")
+        item.button?.toolTip = "Codex Usage Bar — customize your Touch Bar"
+        item.menu = menu
+        statusItem = item
+
+        let mainMenu = NSMenu()
+        let appMenu = NSMenuItem()
+        mainMenu.addItem(appMenu)
+        appMenu.submenu = menu.copy() as? NSMenu
+        NSApplication.shared.mainMenu = mainMenu
+    }
+
+    @objc private func showSettings(_ sender: Any?) {
+        if settingsController == nil {
+            let controller = SettingsWindowController(preferences: preferences)
+            controller.onChange = { [weak self] preferences in
+                self?.preferences = preferences
+                self?.touchBarController.applyPreferences(preferences)
+            }
+            settingsController = controller
+        }
+        if let snapshot = codexSnapshot { settingsController?.updateSnapshot(snapshot) }
+        settingsController?.present()
     }
 
     private func targetApplicationNames() -> Set<String> {
