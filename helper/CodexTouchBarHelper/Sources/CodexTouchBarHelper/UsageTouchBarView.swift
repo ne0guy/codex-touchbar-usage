@@ -18,10 +18,6 @@ final class UsageTouchBarView: NSView {
     override var isFlipped: Bool { true }
     override var intrinsicContentSize: NSSize { NSSize(width: 720, height: 30) }
 
-    private let codexFont = NSFontManager.shared.convert(
-        NSFont.systemFont(ofSize: 14.5, weight: .semibold),
-        toHaveTrait: .italicFontMask
-    )
     private let labelFont = NSFont.systemFont(ofSize: 12.7, weight: .semibold)
     private let valueFont = NSFont.monospacedDigitSystemFont(ofSize: 12.7, weight: .semibold)
     private let smallMonoFont = NSFont.monospacedDigitSystemFont(ofSize: 11.2, weight: .medium)
@@ -58,12 +54,10 @@ final class UsageTouchBarView: NSView {
         let row2Y: CGFloat = 15.0
         let textHeight: CGFloat = 15.0
 
-        drawText("Codex", in: NSRect(x: 8, y: 7.0, width: 60, height: 17), font: codexFont, color: white, alignment: .left)
+        drawText("5h", in: NSRect(x: 8, y: row1Y, width: 24, height: textHeight), font: labelFont, color: white, alignment: .left)
+        drawText("1w", in: NSRect(x: 8, y: row2Y, width: 24, height: textHeight), font: labelFont, color: white, alignment: .left)
 
-        drawText("5h", in: NSRect(x: 75, y: row1Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
-        drawText("1w", in: NSRect(x: 75, y: row2Y, width: 43, height: textHeight), font: labelFont, color: white, alignment: .left)
-
-        let barX: CGFloat = 124
+        let barX: CGFloat = 40
         drawSegmentedBar(
             x: barX,
             y: row1Y + 4.5,
@@ -83,9 +77,9 @@ final class UsageTouchBarView: NSView {
             gap: 5.2
         )
 
-        let percentX: CGFloat = 396
-        let dateX: CGFloat = 454
-        let tokenX: CGFloat = 552
+        let percentX: CGFloat = 312
+        let dateX: CGFloat = 370
+        let tokenX: CGFloat = 468
 
         drawText(
             UsageFormatting.balanceLabel(usedPercent: windows.fiveHour?.usedPercent),
@@ -215,7 +209,7 @@ final class UsageTouchBarView: NSView {
     }
 
     private func drawActivityDots() {
-        let baseX: CGFloat = 701
+        let baseX: CGFloat = 628
         for index in 0..<4 {
             let alpha = 0.25 + CGFloat(index) * 0.16
             white.withAlphaComponent(alpha).setFill()
@@ -225,6 +219,6 @@ final class UsageTouchBarView: NSView {
 
     private func drawErrorDot() {
         danger.setFill()
-        NSBezierPath(ovalIn: NSRect(x: 706, y: 11.5, width: 4.5, height: 4.5)).fill()
+        NSBezierPath(ovalIn: NSRect(x: 633, y: 11.5, width: 4.5, height: 4.5)).fill()
     }
 }
