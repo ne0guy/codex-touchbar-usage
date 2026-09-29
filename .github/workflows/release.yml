@@ -34,7 +34,7 @@ jobs:
           mkdir -p dist
 
           if gh release view "${TAG}" >/dev/null 2>&1; then
-            gh release download "${TAG}" --pattern "${ARCHIVE}.zip" --pattern "${ARCHIVE}.zip.sha256" --dir dist
+            gh release download "${TAG}" --pattern "${ARCHIVE}.zip" --pattern "${ARCHIVE}.zip.sha256" --dir dist --clobber
           else
             gh release create "${TAG}" "dist/${ARCHIVE}.zip" "dist/${ARCHIVE}.zip.sha256" \
               --title "Codex Usage Bar ${VERSION}" --generate-notes
