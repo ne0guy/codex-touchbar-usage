@@ -1,3 +1,14 @@
+# Changelog
+
+## [0.4.1] - 2026-09-30
+
+### Fixed
+
+- Find the Codex CLI in the updated ChatGPT and Codex app bundles so official usage refreshes continue after desktop app updates.
+- Prevent multiple GUI helper copies from running at once and stop older copies during installation.
+- Publish cache files using unique temporary files and atomic rename, avoiding concurrent cache replacement hangs and supporting first-time cache creation.
+- Fetch current usage when running `--once-json` instead of returning a recent cache entry.
+
 ## 0.4.0 — Native customization
 
 - Add a macOS app icon with two rows of lime usage bars.
@@ -7,8 +18,6 @@
 - Collapse hidden columns and center single rows.
 - Preserve the compact v1 layout as the default and offer Restore defaults.
 - Allow the installed helper to quit normally while retaining crash recovery.
-
-# Changelog
 
 All notable changes to Codex Usage Bar are documented here.
 

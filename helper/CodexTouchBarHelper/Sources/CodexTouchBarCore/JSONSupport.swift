@@ -37,9 +37,14 @@ func readJSONObject(from url: URL) throws -> JSONObject {
 func writeJSONObject(_ object: JSONObject, to url: URL) throws {
     try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
     let data = try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
-    let temporaryURL = url.deletingLastPathComponent().appendingPathComponent(".\(url.lastPathComponent).tmp")
-    try data.write(to: temporaryURL, options: .atomic)
-    _ = try FileManager.default.replaceItemAt(url, withItemAt: temporaryURL)
+    // Each writer gets its own file. POSIX rename atomically publishes it without
+    // Foundation's metadata exchange, which can stall concurrent cache writers.
+    let temporaryURL = url.deletingLastPathComponent().appendingPathComponent(".\(url.lastPathComponent).\(UUID().uuidString).tmp")
+    defer { try? FileManager.default.removeItem(at: temporaryURL) }
+    try data.write(to: temporaryURL)
+    guard Darwin.rename(temporaryURL.path, url.path) == 0 else {
+        throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+    }
 }
 
 func intValue(_ value: Any?) -> Int? {

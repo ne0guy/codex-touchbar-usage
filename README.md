@@ -17,7 +17,7 @@
 
 Codex Usage Bar shows a native usage panel while Codex or its ChatGPT desktop shell is in the foreground. Switch to another app and the panel hides, restoring the system Touch Bar controls.
 
-Version **0.4.0** adds a Mac settings window. Choose the details you want to see, preview your changes immediately, and save your preferences automatically.
+Version **0.4.1** restores live usage refresh and prevents duplicate helper copies. Version **0.4.0** adds a Mac settings window. Choose the details you want to see, preview your changes immediately, and save your preferences automatically.
 
 <p align="center">
   <img src="assets/customization.png" width="820" alt="Native customization window with a Touch Bar preview, display checkboxes, and style options">
@@ -63,12 +63,12 @@ The cask installs the app, registers its LaunchAgent, and starts it. No `brew se
 
 ### GitHub release
 
-Download `CodexUsageBar-v0.4.0-arm64.zip` and `CodexUsageBar-v0.4.0-arm64.zip.sha256` from the [0.4.0 release](https://github.com/ne0guy/codex-touchbar-usage/releases/tag/v0.4.0). Place both files in the same folder, then run:
+Download `CodexUsageBar-v0.4.1-arm64.zip` and `CodexUsageBar-v0.4.1-arm64.zip.sha256` from the [0.4.1 release](https://github.com/ne0guy/codex-touchbar-usage/releases/tag/v0.4.1). Place both files in the same folder, then run:
 
 ```bash
-shasum -a 256 -c CodexUsageBar-v0.4.0-arm64.zip.sha256
-unzip CodexUsageBar-v0.4.0-arm64.zip
-cd CodexUsageBar-v0.4.0-arm64
+shasum -a 256 -c CodexUsageBar-v0.4.1-arm64.zip.sha256
+unzip CodexUsageBar-v0.4.1-arm64.zip
+cd CodexUsageBar-v0.4.1-arm64
 ./install.sh
 ```
 

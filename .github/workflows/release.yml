@@ -20,6 +20,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check concurrent cache writes
+        run: bash ./scripts/test_cache_writes.sh
+
       - name: Build release archive
         run: bash ./scripts/package_release.sh
 

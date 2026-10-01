@@ -1,6 +1,6 @@
 cask "codex-usage-bar" do
-  version "0.4.0"
-  sha256 "f733c57a5b61b3f142aaaeadcc7f51254740025e64c3b240aa4d61a9f6b85f37"
+  version "0.4.1"
+  sha256 "120093d51515e82127e7ab1f46edb63941b31e5625d678d72e7965cbdb81d423"
 
   url "https://github.com/ne0guy/codex-touchbar-usage/releases/download/v#{version}/CodexUsageBar-v#{version}-arm64.zip"
   name "Codex Usage Bar"

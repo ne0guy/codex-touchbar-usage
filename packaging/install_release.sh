@@ -36,7 +36,8 @@ done
 if [[ -f "${LAUNCH_AGENT}" ]]; then
   /bin/launchctl bootout "${DOMAIN}" "${LAUNCH_AGENT}" >/dev/null 2>&1 || true
 fi
-/usr/bin/pkill -fx "${EXECUTABLE}" >/dev/null 2>&1 || true
+# Older versions allowed copies from extracted releases and build folders.
+/usr/bin/pkill -x CodexTouchBarHelper >/dev/null 2>&1 || true
 rm -rf "${APP_DIR}"
 /usr/bin/ditto "${SOURCE_APP}" "${APP_DIR}"
 

@@ -65,7 +65,7 @@ cat > "${LAUNCH_AGENT}" <<PLIST
 </plist>
 PLIST
 
-/usr/bin/pkill -fx "${EXECUTABLE}" >/dev/null 2>&1 || true
+/usr/bin/pkill -x CodexTouchBarHelper >/dev/null 2>&1 || true
 /bin/launchctl bootstrap "${DOMAIN}" "${LAUNCH_AGENT}" >/dev/null 2>&1 || true
 /bin/launchctl enable "${DOMAIN}/com.local.codex-touchbar-helper" >/dev/null 2>&1 || true
 /bin/launchctl kickstart -k "${DOMAIN}/com.local.codex-touchbar-helper" >/dev/null 2>&1 || true
